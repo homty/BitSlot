@@ -10,6 +10,8 @@ public class GameManager : MonoBehaviour
     private GameObject _board;
     private GameObject[,] _gameBoard;
     private Vector3 _offset = new Vector3(0, 0, -1);
+    [SerializeField]
+    private float[] spawnChances;
     // Start is called before the first frame update
     void Start()
     {
@@ -28,6 +30,30 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+    private GameObject GetRandomPiece()
+    {
+        float total = 0;
+        foreach (float chance in spawnChances)
+        {
+            total += chance;
+        }
+
+       float randomPoint = Random.value * total;
+
+        for (int i = 0; i < spawnChances.Length; i++)
+        {
+            if (randomPoint < spawnChances[i])
+            {
+                return gamePieces[i];
+            }
+            else
+            {
+                randomPoint -= spawnChances[i];
+            }
+        }
+    
+        return gamePieces[gamePieces.Length - 1];
+    }
     public void Spin()
     {
         for (int i = 0; i < boardHeight; i++)
@@ -40,7 +66,7 @@ public class GameManager : MonoBehaviour
                     GameObject destroyPiece = gridPosition.transform.GetChild(0).gameObject;
                     Destroy(destroyPiece);
                 }
-                GameObject pieceType = gamePieces[Random.Range(0, gamePieces.Length)];
+                GameObject pieceType = GetRandomPiece();
                 GameObject thisPiece = Instantiate(pieceType, gridPosition.transform.position + _offset, Quaternion.identity);
                 thisPiece.name = pieceType.name;
                 thisPiece.transform.parent = gridPosition.transform;

@@ -772,6 +772,14 @@ MonoBehaviour:
   - {fileID: 4580959941066254069, guid: 8570bc45a40e1dc45b8437f554d66a39, type: 3}
   - {fileID: 5953501256234043948, guid: eaa80de93a271d647937c1744acb720a, type: 3}
   - {fileID: 7247098857549693709, guid: 70da5aae27c4bb94cad0259b46d5f4c5, type: 3}
+  spawnChances:
+  - 0.01
+  - 53.19
+  - 0.53
+  - 11.01
+  - 27.3
+  - 6.4
+  - 1.56
 --- !u!4 &771841488
 Transform:
   m_ObjectHideFlags: 0
