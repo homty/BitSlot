@@ -82,14 +82,11 @@ public class GameManager : MonoBehaviour
 
     private void CheckForMatches()
     {
-        // Очистить предыдущие линии
         foreach (GameObject line in _matchLines)
         {
             Destroy(line);
         }
         _matchLines.Clear();
-
-        // Горизонтальные совпадения
         for (int i = 0; i < boardHeight; i++)
         {
             for (int j = 0; j < boardWidth - 2; j++)
@@ -100,8 +97,6 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-
-        // Вертикальные совпадения
         for (int j = 0; j < boardWidth; j++)
         {
             for (int i = 0; i < boardHeight - 2; i++)
@@ -112,8 +107,6 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-
-        // Диагонали ↘
         for (int i = 0; i < boardHeight - 2; i++)
         {
             for (int j = 0; j < boardWidth - 2; j++)
@@ -124,8 +117,6 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
-
-        // Диагонали ↙
         for (int i = 0; i < boardHeight - 2; i++)
         {
             for (int j = 2; j < boardWidth; j++)
@@ -136,36 +127,70 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+        for (int col = 0; col < boardWidth; col++)
+        {
+            string targetName = _gameBoard[0, col].name;
+            bool isFullMultiplierColumn = true;
+
+            for (int row = 0; row < boardHeight; row++)
+            {
+                GameObject piece = _gameBoard[row, col];
+                if (piece.name != targetName) { isFullMultiplierColumn = false; break; }
+
+                SymbolInfo info = piece.GetComponent<SymbolInfo>();
+                if (info == null || !info.isMultiplier)
+                {
+                    isFullMultiplierColumn = false;
+                    break;
+                }
+            }
+
+            if (isFullMultiplierColumn)
+            {
+                Debug.Log($"💥 JACKPOT! Column {col} has 5 matching multipliers: {targetName}");
+
+                Vector3 start = _gameBoard[0, col].transform.position;
+                Vector3 end = _gameBoard[boardHeight - 1, col].transform.position;
+                DrawLine(start, end, Color.green); // Green for jackpot
+            }
+        }
     }
 
     private bool AreMatching(GameObject a, GameObject b, GameObject c)
     {
+        if (a == null || b == null || c == null) return false;
+
+        SymbolInfo aInfo = a.GetComponent<SymbolInfo>();
+        SymbolInfo bInfo = b.GetComponent<SymbolInfo>();
+        SymbolInfo cInfo = c.GetComponent<SymbolInfo>();
+
+        if (aInfo == null || bInfo == null || cInfo == null)
+        return false;
+
+        // Don't count multipliers in standard match detection
+        if (aInfo.isMultiplier || bInfo.isMultiplier || cInfo.isMultiplier)
+            return false;
+
         return a != null && b != null && c != null &&
                a.name == b.name && b.name == c.name;
     }
 
-    private void DrawLine(Vector3 start, Vector3 end)
+    private void DrawLine(Vector3 start, Vector3 end, Color? colorOverride = null)
     {
         GameObject myLine = new GameObject("MatchLine");
         myLine.transform.position = start;
-
         LineRenderer lr = myLine.AddComponent<LineRenderer>();
         lr.material = new Material(Shader.Find("Sprites/Default"));
         lr.startWidth = 0.1f;
         lr.endWidth = 0.1f;
         lr.positionCount = 2;
-        lr.startColor = Color.red;
-        lr.endColor = Color.red;
+        lr.startColor = colorOverride ?? Color.red;
+        lr.endColor = colorOverride ?? Color.red;
         lr.useWorldSpace = true;
-
-        lr.sortingLayerName = "Line"; 
-        lr.sortingOrder = 1;              
-
+        lr.sortingLayerName = "Line";
+        lr.sortingOrder = 1;
         lr.SetPosition(0, start);
         lr.SetPosition(1, end);
-
         _matchLines.Add(myLine);
     }
-
-
 }
