@@ -194,16 +194,15 @@ public class GameManager : MonoBehaviour
         SymbolInfo cInfo = c.GetComponent<SymbolInfo>();
 
         if (aInfo == null || bInfo == null || cInfo == null)
-        return false;
-
-        // Don't count multipliers in standard match detection
-        if (aInfo.isMultiplier || bInfo.isMultiplier || cInfo.isMultiplier)
             return false;
 
-        return a != null && b != null && c != null &&
-               a.name == b.name && b.name == c.name;
-    }
+        // Exclude multipliers and bonuses from standard match detection
+        if (aInfo.isMultiplier || bInfo.isMultiplier || cInfo.isMultiplier ||
+            aInfo.isBonus || bInfo.isBonus || cInfo.isBonus)
+            return false;
 
+        return a.name == b.name && b.name == c.name;
+    }
     private void DrawLine(Vector3 start, Vector3 end, Color? colorOverride = null)
     {
         GameObject myLine = new GameObject("MatchLine");
