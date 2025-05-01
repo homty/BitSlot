@@ -1,27 +1,30 @@
 using UnityEngine;
 using System.Collections.Generic;
-using TMPro; // For displaying balance text
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private int boardHeight, boardWidth;
     [SerializeField] private GameObject[] gamePieces;
     [SerializeField] private float[] spawnChances;
-    [SerializeField] private TextMeshProUGUI balanceText; // 👈 Add this in the Inspector
+    [SerializeField] private TextMeshProUGUI balanceText;
+    [SerializeField] private float betAmount = 1f;
+    [SerializeField] private float minBetAmount = 1f;
+    [SerializeField] private TextMeshProUGUI betText;
+
 
     private GameObject _board;
     private GameObject[,] _gameBoard;
     private Vector3 _offset = new Vector3(0, 0, -1);
     private List<GameObject> _matchLines;
-    private float playerBalance = 0f; // 👈 Player's current balance
-
+    private float playerBalance = 0f;
     void Start()
     {
         _board = GameObject.Find("GameBoard");
         _gameBoard = new GameObject[boardHeight, boardWidth];
         _matchLines = new List<GameObject>();
-        UpdateBalanceUI(); // 👈 Initialize UI
-
+        UpdateBalanceUI();
+        UpdateBetUI();
         for (int i = 0; i < boardHeight; i++)
         {
             for (int j = 0; j < boardWidth; j++)
@@ -92,7 +95,7 @@ public class GameManager : MonoBehaviour
         }
         _matchLines.Clear();
 
-        // Horizontal
+        //horizontal
         for (int i = 0; i < boardHeight; i++)
         {
             for (int j = 0; j < boardWidth - 2; j++)
@@ -105,7 +108,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Vertical
+        //vertical
         for (int j = 0; j < boardWidth; j++)
         {
             for (int i = 0; i < boardHeight - 2; i++)
@@ -118,7 +121,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Diagonal Left-Right
+        //diagonal left-Right
         for (int i = 0; i < boardHeight - 2; i++)
         {
             for (int j = 0; j < boardWidth - 2; j++)
@@ -131,7 +134,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Diagonal Right-Left
+        //diagonal right-Left
         for (int i = 0; i < boardHeight - 2; i++)
         {
             for (int j = 2; j < boardWidth; j++)
@@ -144,7 +147,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Jackpot column detection
+        //multiplier 
         for (int col = 0; col < boardWidth; col++)
         {
             string targetName = _gameBoard[0, col].name;
@@ -177,7 +180,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Bonus match across all columns
+        //bonus
         bool isFiveBonusAcross = true;
         GameObject[] bonusPositions = new GameObject[boardWidth];
 
@@ -194,7 +197,7 @@ public class GameManager : MonoBehaviour
                 {
                     bonusPositions[col] = piece;
                     foundBonusInColumn = true;
-                    break; // Stop at the first bonus found in this column
+                    break;
                 }
             }
 
@@ -223,11 +226,34 @@ public class GameManager : MonoBehaviour
             UpdateBalanceUI();
         }
     }
-
     private void UpdateBalanceUI()
     {
         if (balanceText != null)
             balanceText.text = $"{playerBalance:F2}USDT";
+    }
+
+    private void UpdateBetUI()
+    {
+        if (betText != null)
+            betText.text = $"{betAmount:F2} USDT";
+    }
+
+    public void IncreaseBet()
+    {
+        betAmount += 5f;
+        UpdateBetUI();
+    }
+
+    public void DecreaseBet()
+    {
+        if (betAmount > minBetAmount)
+        {
+            betAmount -= 5f;
+            UpdateBetUI();
+        }else{
+            //Message about minimum bet amount
+            Debug.Log("Minimum bet amount reached.");
+        }
     }
 
     private bool AreMatching(GameObject a, GameObject b, GameObject c)
@@ -241,7 +267,7 @@ public class GameManager : MonoBehaviour
         if (aInfo == null || bInfo == null || cInfo == null)
             return false;
 
-        // Exclude multipliers and bonuses from standard match detection
+        //not include in matching
         if (aInfo.isMultiplier || bInfo.isMultiplier || cInfo.isMultiplier ||
             aInfo.isBonus || bInfo.isBonus || cInfo.isBonus)
             return false;
