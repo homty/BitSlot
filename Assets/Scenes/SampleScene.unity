@@ -844,8 +844,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 10 USDT
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3485b05e74b654341aa78122b0932230, type: 2}
-  m_sharedMaterial: {fileID: 2168632277238293884, guid: 3485b05e74b654341aa78122b0932230, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
+  m_sharedMaterial: {fileID: -1595600875855051688, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1969,8 +1969,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 39.23 USDT
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3485b05e74b654341aa78122b0932230, type: 2}
-  m_sharedMaterial: {fileID: 2168632277238293884, guid: 3485b05e74b654341aa78122b0932230, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
+  m_sharedMaterial: {fileID: -1595600875855051688, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2566,8 +2566,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -138, y: -158}
-  m_SizeDelta: {x: 87.0359, y: 14.8155}
+  m_AnchoredPosition: {x: -130.74481, y: -158}
+  m_SizeDelta: {x: 101.5462, y: 14.8155}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1484371419
 MonoBehaviour:
@@ -2591,8 +2591,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Total win
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3485b05e74b654341aa78122b0932230, type: 2}
-  m_sharedMaterial: {fileID: 2168632277238293884, guid: 3485b05e74b654341aa78122b0932230, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
+  m_sharedMaterial: {fileID: -1595600875855051688, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3165,8 +3165,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Bet
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3485b05e74b654341aa78122b0932230, type: 2}
-  m_sharedMaterial: {fileID: 2168632277238293884, guid: 3485b05e74b654341aa78122b0932230, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
+  m_sharedMaterial: {fileID: -1595600875855051688, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
