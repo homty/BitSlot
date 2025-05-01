@@ -101,5 +101,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isMultiplier: 0
+  value: 0.5
   multiplierValue: 1
-  isBonusTrigger: 0
+  isBonus: 0

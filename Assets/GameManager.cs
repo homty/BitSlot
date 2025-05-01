@@ -1,22 +1,26 @@
 using UnityEngine;
 using System.Collections.Generic;
+using TMPro; // For displaying balance text
 
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private int boardHeight, boardWidth;
     [SerializeField] private GameObject[] gamePieces;
     [SerializeField] private float[] spawnChances;
+    [SerializeField] private TextMeshProUGUI balanceText; // 👈 Add this in the Inspector
 
     private GameObject _board;
     private GameObject[,] _gameBoard;
     private Vector3 _offset = new Vector3(0, 0, -1);
     private List<GameObject> _matchLines;
+    private float playerBalance = 0f; // 👈 Player's current balance
 
     void Start()
     {
         _board = GameObject.Find("GameBoard");
         _gameBoard = new GameObject[boardHeight, boardWidth];
         _matchLines = new List<GameObject>();
+        UpdateBalanceUI(); // 👈 Initialize UI
 
         for (int i = 0; i < boardHeight; i++)
         {
@@ -82,42 +86,65 @@ public class GameManager : MonoBehaviour
 
     private void CheckForMatches()
     {
-        foreach (GameObject line in _matchLines){
+        foreach (GameObject line in _matchLines)
+        {
             Destroy(line);
         }
         _matchLines.Clear();
+
+        // Horizontal
         for (int i = 0; i < boardHeight; i++)
         {
-            for (int j = 0; j < boardWidth - 2; j++){
-                if (AreMatching(_gameBoard[i, j], _gameBoard[i, j + 1], _gameBoard[i, j + 2])){
-                    DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i, j + 2].transform.position);
-                }
-            }
-        }
-        for (int j = 0; j < boardWidth; j++){
-            for (int i = 0; i < boardHeight - 2; i++){
-                if (AreMatching(_gameBoard[i, j], _gameBoard[i + 1, j], _gameBoard[i + 2, j])){
-                    DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j].transform.position);
-                }
-            }
-        }
-        for (int i = 0; i < boardHeight - 2; i++){
             for (int j = 0; j < boardWidth - 2; j++)
             {
-                if (AreMatching(_gameBoard[i, j], _gameBoard[i + 1, j + 1], _gameBoard[i + 2, j + 2])){
-                    DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j + 2].transform.position);
+                if (AreMatching(_gameBoard[i, j], _gameBoard[i, j + 1], _gameBoard[i, j + 2]))
+                {
+                    DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i, j + 2].transform.position);
+                    AddToBalance(_gameBoard[i, j]);
                 }
             }
         }
+
+        // Vertical
+        for (int j = 0; j < boardWidth; j++)
+        {
+            for (int i = 0; i < boardHeight - 2; i++)
+            {
+                if (AreMatching(_gameBoard[i, j], _gameBoard[i + 1, j], _gameBoard[i + 2, j]))
+                {
+                    DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j].transform.position);
+                    AddToBalance(_gameBoard[i, j]);
+                }
+            }
+        }
+
+        // Diagonal Left-Right
+        for (int i = 0; i < boardHeight - 2; i++)
+        {
+            for (int j = 0; j < boardWidth - 2; j++)
+            {
+                if (AreMatching(_gameBoard[i, j], _gameBoard[i + 1, j + 1], _gameBoard[i + 2, j + 2]))
+                {
+                    DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j + 2].transform.position);
+                    AddToBalance(_gameBoard[i, j]);
+                }
+            }
+        }
+
+        // Diagonal Right-Left
         for (int i = 0; i < boardHeight - 2; i++)
         {
             for (int j = 2; j < boardWidth; j++)
             {
-                if (AreMatching(_gameBoard[i, j], _gameBoard[i + 1, j - 1], _gameBoard[i + 2, j - 2])){
+                if (AreMatching(_gameBoard[i, j], _gameBoard[i + 1, j - 1], _gameBoard[i + 2, j - 2]))
+                {
                     DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j - 2].transform.position);
+                    AddToBalance(_gameBoard[i, j]);
                 }
             }
         }
+
+        // Jackpot column detection
         for (int col = 0; col < boardWidth; col++)
         {
             string targetName = _gameBoard[0, col].name;
@@ -126,13 +153,15 @@ public class GameManager : MonoBehaviour
             for (int row = 0; row < boardHeight; row++)
             {
                 GameObject piece = _gameBoard[row, col];
-                if (piece.name != targetName){ 
-                    isFullMultiplierColumn = false; 
-                    break; 
+                if (piece.name != targetName)
+                {
+                    isFullMultiplierColumn = false;
+                    break;
                 }
 
                 SymbolInfo info = piece.GetComponent<SymbolInfo>();
-                if (info == null || !info.isMultiplier){
+                if (info == null || !info.isMultiplier)
+                {
                     isFullMultiplierColumn = false;
                     break;
                 }
@@ -147,6 +176,8 @@ public class GameManager : MonoBehaviour
                 DrawLine(start, end, Color.green); // Green for jackpot
             }
         }
+
+        // Bonus match across all columns
         bool isFiveBonusAcross = true;
         GameObject[] bonusPositions = new GameObject[boardWidth];
 
@@ -177,12 +208,26 @@ public class GameManager : MonoBehaviour
         if (isFiveBonusAcross)
         {
             Debug.Log("🎁 BONUS MATCH! 5 bonus symbols from left to right across columns!");
-
-            // Draw a line from first to last bonus symbol
             Vector3 start = bonusPositions[0].transform.position;
             Vector3 end = bonusPositions[boardWidth - 1].transform.position;
             DrawLine(start, end, Color.yellow);
         }
+    }
+
+    private void AddToBalance(GameObject piece)
+    {
+        SymbolInfo info = piece.GetComponent<SymbolInfo>();
+        if (info != null && !info.isMultiplier && !info.isBonus)
+        {
+            playerBalance += info.value;
+            UpdateBalanceUI();
+        }
+    }
+
+    private void UpdateBalanceUI()
+    {
+        if (balanceText != null)
+            balanceText.text = $"{playerBalance:F2}USDT";
     }
 
     private bool AreMatching(GameObject a, GameObject b, GameObject c)
@@ -203,6 +248,7 @@ public class GameManager : MonoBehaviour
 
         return a.name == b.name && b.name == c.name;
     }
+
     private void DrawLine(Vector3 start, Vector3 end, Color? colorOverride = null)
     {
         GameObject myLine = new GameObject("MatchLine");
