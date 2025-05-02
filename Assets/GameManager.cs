@@ -14,17 +14,16 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI betText;
     [SerializeField] private GameObject explosionPrefab; // 💥 Explosion prefab reference
 
+    private List<Vector2Int> matchedPositions = new List<Vector2Int>();
     private GameObject _board;
     private GameObject[,] _gameBoard;
     private Vector3 _offset = new Vector3(0, 0, -1);
-    private List<GameObject> _matchLines;
     private float playerBalance = 0f;
 
     void Start()
     {
         _board = GameObject.Find("GameBoard");
         _gameBoard = new GameObject[boardHeight, boardWidth];
-        _matchLines = new List<GameObject>();
         UpdateBalanceUI();
         UpdateBetUI();
 
@@ -92,13 +91,7 @@ public class GameManager : MonoBehaviour
 
     private void CheckForMatches()
     {
-        foreach (GameObject line in _matchLines)
-        {
-            Destroy(line);
-        }
-        _matchLines.Clear();
-
-        // Horizontal
+        //Horizontal
         for (int i = 0; i < boardHeight; i++)
         {
             for (int j = 0; j < boardWidth - 2; j++)
@@ -109,13 +102,12 @@ public class GameManager : MonoBehaviour
                     StartCoroutine(AnimateMatchEffect(_gameBoard[i, j + 1], 0.1f));
                     StartCoroutine(AnimateMatchEffect(_gameBoard[i, j + 2], 0.1f));
 
-                    DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i, j + 2].transform.position);
                     AddToBalance(_gameBoard[i, j]);
                 }
             }
         }
 
-        // Vertical
+        //Vertical
         for (int j = 0; j < boardWidth; j++)
         {
             for (int i = 0; i < boardHeight - 2; i++)
@@ -126,13 +118,12 @@ public class GameManager : MonoBehaviour
                     StartCoroutine(AnimateMatchEffect(_gameBoard[i + 1, j], 0.1f));
                     StartCoroutine(AnimateMatchEffect(_gameBoard[i + 2, j], 0.1f));
 
-                    DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j].transform.position);
                     AddToBalance(_gameBoard[i, j]);
                 }
             }
         }
 
-        // Diagonal Left-Right
+        //Diagonal Left-Right
         for (int i = 0; i < boardHeight - 2; i++)
         {
             for (int j = 0; j < boardWidth - 2; j++)
@@ -143,13 +134,12 @@ public class GameManager : MonoBehaviour
                     StartCoroutine(AnimateMatchEffect(_gameBoard[i + 1, j + 1], 0.1f));
                     StartCoroutine(AnimateMatchEffect(_gameBoard[i + 2, j + 2], 0.1f));
 
-                    DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j + 2].transform.position);
                     AddToBalance(_gameBoard[i, j]);
                 }
             }
         }
 
-        // Diagonal Right-Left
+        //Diagonal Right-Left
         for (int i = 0; i < boardHeight - 2; i++)
         {
             for (int j = 2; j < boardWidth; j++)
@@ -160,13 +150,11 @@ public class GameManager : MonoBehaviour
                     StartCoroutine(AnimateMatchEffect(_gameBoard[i + 1, j - 1], 0.1f));
                     StartCoroutine(AnimateMatchEffect(_gameBoard[i + 2, j - 2], 0.1f));
 
-                    DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j - 2].transform.position);
                     AddToBalance(_gameBoard[i, j]);
                 }
             }
         }
 
-        // Multiplier column match
         for (int col = 0; col < boardWidth; col++)
         {
             string targetName = _gameBoard[0, col].name;
@@ -198,13 +186,9 @@ public class GameManager : MonoBehaviour
                     StartCoroutine(AnimateMatchEffect(_gameBoard[row, col], 0.1f));
                 }
 
-                Vector3 start = _gameBoard[0, col].transform.position;
-                Vector3 end = _gameBoard[boardHeight - 1, col].transform.position;
-                DrawLine(start, end, Color.green);
             }
         }
 
-        // Bonus symbol match
         bool isFiveBonusAcross = true;
         GameObject[] bonusPositions = new GameObject[boardWidth];
 
@@ -244,9 +228,6 @@ public class GameManager : MonoBehaviour
                 }
             }
 
-            Vector3 start = bonusPositions[0].transform.position;
-            Vector3 end = bonusPositions[boardWidth - 1].transform.position;
-            DrawLine(start, end, Color.yellow);
         }
     }
 
@@ -270,10 +251,8 @@ public class GameManager : MonoBehaviour
 
         Color symbolColor = info.tokenColor;
 
-        // Instantiate explosion
         GameObject explosion = Instantiate(explosionPrefab, piece.transform.position, Quaternion.identity);
 
-        // Set explosion color via ParticleSystem (preferred)
         ParticleSystem ps = explosion.GetComponent<ParticleSystem>();
         if (ps != null)
         {
@@ -282,7 +261,6 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            // Fallback to Renderer if no ParticleSystem found
             Renderer rend = explosion.GetComponent<Renderer>();
             if (rend != null && rend.material.HasProperty("_Color"))
             {
@@ -342,7 +320,7 @@ public class GameManager : MonoBehaviour
         return a.name == b.name && b.name == c.name;
     }
 
-    private System.Collections.IEnumerator AnimateMatchEffect(GameObject piece, float delay)
+    private IEnumerator AnimateMatchEffect(GameObject piece, float delay)
     {
         if (piece == null) yield break;
 
@@ -352,19 +330,16 @@ public class GameManager : MonoBehaviour
         float elapsedTime = 0f;
         float duration = 0.3f;
 
-        // Scale up
         while (elapsedTime < duration)
         {
-            piece.transform.localScale = Vector3.Lerp(originalScale, targetScale, (elapsedTime / duration));
+            piece.transform.localScale = Vector3.Lerp(originalScale, targetScale, elapsedTime / duration);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        // Shake
         float shakeDuration = 0.3f;
         float shakeMagnitude = 0.05f;
         elapsedTime = 0f;
-
         Vector3 originalPos = piece.transform.position;
 
         while (elapsedTime < shakeDuration)
@@ -375,34 +350,70 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
-        // Reset position & scale
         piece.transform.position = originalPos;
         piece.transform.localScale = originalScale;
 
-        // Trigger explosion
         TriggerExplosion(piece);
-        Destroy(piece);
-        
+
+        int foundRow = -1;
+        int foundCol = -1;
+
+        for (int i = 0; i < boardHeight; i++)
+        {
+            for (int j = 0; j < boardWidth; j++)
+            {
+                if (_gameBoard[i, j] == piece)
+                {
+                    matchedPositions.Add(new Vector2Int(i, j));
+                    foundRow = i;
+                    foundCol = j;
+                    break;
+                }
+            }
+            if (foundRow != -1) break;
+        }
+
+        if (foundRow != -1 && foundCol != -1)
+        {
+            Destroy(piece);
+            _gameBoard[foundRow, foundCol] = null;
+        }
+
         yield return new WaitForSeconds(delay);
+
+        if (AllAnimationsComplete())
+        {
+            StartCoroutine(RespawnMatchedSymbols());
+        }
     }
 
-
-    private void DrawLine(Vector3 start, Vector3 end, Color? colorOverride = null)
+    private bool AllAnimationsComplete()
     {
-        GameObject myLine = new GameObject("MatchLine");
-        myLine.transform.position = start;
-        LineRenderer lr = myLine.AddComponent<LineRenderer>();
-        lr.material = new Material(Shader.Find("Sprites/Default"));
-        lr.startWidth = 0.1f;
-        lr.endWidth = 0.1f;
-        lr.positionCount = 2;
-        lr.startColor = colorOverride ?? Color.red;
-        lr.endColor = colorOverride ?? Color.red;
-        lr.useWorldSpace = true;
-        lr.sortingLayerName = "Line";
-        lr.sortingOrder = 1;
-        lr.SetPosition(0, start);
-        lr.SetPosition(1, end);
-        _matchLines.Add(myLine);
+        return matchedPositions.Count >= 3;
+    }
+
+    private IEnumerator RespawnMatchedSymbols()
+    {
+        yield return new WaitForSeconds(0.2f); 
+
+        foreach (Vector2Int pos in matchedPositions)
+        {
+            if (_gameBoard[pos.x, pos.y] != null)
+            {
+                Destroy(_gameBoard[pos.x, pos.y]);
+            }
+
+            GameObject gridPosition = _board.transform.Find(pos.x + " " + pos.y).gameObject;
+            GameObject pieceType = GetRandomPiece();
+            GameObject thisPiece = Instantiate(pieceType, gridPosition.transform.position + _offset, Quaternion.identity);
+            thisPiece.name = pieceType.name;
+            thisPiece.transform.parent = gridPosition.transform;
+            _gameBoard[pos.x, pos.y] = thisPiece;
+        }
+
+        matchedPositions.Clear();
+
+        yield return new WaitForSeconds(0.3f); 
+        CheckForMatches();
     }
 }

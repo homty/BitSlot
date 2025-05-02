@@ -101,5 +101,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isMultiplier: 1
+  value: 0
   multiplierValue: 2
-  isBonusTrigger: 0
+  isBonus: 0
+  tokenColor: {r: 0.15686275, g: 0.29411766, b: 0.38431376, a: 1}
