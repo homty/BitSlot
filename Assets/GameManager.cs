@@ -244,26 +244,36 @@ public class GameManager : MonoBehaviour
         }
     }
 
-        private void TriggerExplosion(GameObject piece)
+    private void TriggerExplosion(GameObject piece)
     {
-        // допустим, вместо particle ты инстанциируешь анимацию:
-        GameObject anim = Instantiate(explosionPrefab, piece.transform.position, Quaternion.identity);
+        if (explosionPrefab == null || piece == null) return;
 
-        // вычислим длину анимации из AnimatorController (если там один клип):
-        Animator animator = anim.GetComponent<Animator>();
-        if (animator != null && animator.runtimeAnimatorController != null)
+        SymbolInfo info = piece.GetComponent<SymbolInfo>();
+        if (info == null) return;
+
+        Color symbolColor = info.tokenColor;
+
+        // Instantiate explosion
+        GameObject explosion = Instantiate(explosionPrefab, piece.transform.position, Quaternion.identity);
+
+        // Set explosion color via ParticleSystem (preferred)
+        ParticleSystem ps = explosion.GetComponent<ParticleSystem>();
+        if (ps != null)
         {
-            var clips = animator.runtimeAnimatorController.animationClips;
-            if (clips.Length > 0)
+            var main = ps.main;
+            main.startColor = symbolColor;
+        }
+        else
+        {
+            // Fallback to Renderer if no ParticleSystem found
+            Renderer rend = explosion.GetComponent<Renderer>();
+            if (rend != null && rend.material.HasProperty("_Color"))
             {
-                float clipLength = clips[0].length;
-                Destroy(anim, clipLength);
-                return;
+                rend.material.color = symbolColor;
             }
         }
 
-        // fallback: если нет Animator или не смогли вычислить длительность
-        Destroy(anim, 1f);
+        Destroy(explosion, 1f);
     }
 
     private void UpdateBalanceUI()
