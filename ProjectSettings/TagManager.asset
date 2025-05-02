@@ -56,6 +56,9 @@ TagManager:
   - name: Symbol
     uniqueID: 454984621
     locked: 0
+  - name: Animation
+    uniqueID: 3499712189
+    locked: 0
   - name: Line
     uniqueID: 2066809359
     locked: 0

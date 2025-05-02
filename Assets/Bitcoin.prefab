@@ -104,3 +104,4 @@ MonoBehaviour:
   value: 5
   multiplierValue: 1
   isBonus: 0
+  tokenColor: {r: 1, g: 0.8117648, b: 0.16078432, a: 1}

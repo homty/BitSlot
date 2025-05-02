@@ -6,4 +6,5 @@ public class SymbolInfo : MonoBehaviour
     public float value;
     public int multiplierValue = 1;
     public bool isBonus;
+    public Color tokenColor = Color.white;
 }

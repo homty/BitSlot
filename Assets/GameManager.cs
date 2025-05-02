@@ -11,13 +11,14 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float betAmount = 1f;
     [SerializeField] private float minBetAmount = 1f;
     [SerializeField] private TextMeshProUGUI betText;
-
+    [SerializeField] private GameObject explosionPrefab; // 💥 Explosion prefab reference
 
     private GameObject _board;
     private GameObject[,] _gameBoard;
     private Vector3 _offset = new Vector3(0, 0, -1);
     private List<GameObject> _matchLines;
     private float playerBalance = 0f;
+
     void Start()
     {
         _board = GameObject.Find("GameBoard");
@@ -25,6 +26,7 @@ public class GameManager : MonoBehaviour
         _matchLines = new List<GameObject>();
         UpdateBalanceUI();
         UpdateBetUI();
+
         for (int i = 0; i < boardHeight; i++)
         {
             for (int j = 0; j < boardWidth; j++)
@@ -95,59 +97,75 @@ public class GameManager : MonoBehaviour
         }
         _matchLines.Clear();
 
-        //horizontal
+        // Horizontal
         for (int i = 0; i < boardHeight; i++)
         {
             for (int j = 0; j < boardWidth - 2; j++)
             {
                 if (AreMatching(_gameBoard[i, j], _gameBoard[i, j + 1], _gameBoard[i, j + 2]))
                 {
+                    TriggerExplosion(_gameBoard[i, j]);
+                    TriggerExplosion(_gameBoard[i, j + 1]);
+                    TriggerExplosion(_gameBoard[i, j + 2]);
+
                     DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i, j + 2].transform.position);
                     AddToBalance(_gameBoard[i, j]);
                 }
             }
         }
 
-        //vertical
+        // Vertical
         for (int j = 0; j < boardWidth; j++)
         {
             for (int i = 0; i < boardHeight - 2; i++)
             {
                 if (AreMatching(_gameBoard[i, j], _gameBoard[i + 1, j], _gameBoard[i + 2, j]))
                 {
+                    TriggerExplosion(_gameBoard[i, j]);
+                    TriggerExplosion(_gameBoard[i + 1, j]);
+                    TriggerExplosion(_gameBoard[i + 2, j]);
+
                     DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j].transform.position);
                     AddToBalance(_gameBoard[i, j]);
                 }
             }
         }
 
-        //diagonal left-Right
+        // Diagonal Left-Right
         for (int i = 0; i < boardHeight - 2; i++)
         {
             for (int j = 0; j < boardWidth - 2; j++)
             {
                 if (AreMatching(_gameBoard[i, j], _gameBoard[i + 1, j + 1], _gameBoard[i + 2, j + 2]))
                 {
+                    TriggerExplosion(_gameBoard[i, j]);
+                    TriggerExplosion(_gameBoard[i + 1, j + 1]);
+                    TriggerExplosion(_gameBoard[i + 2, j + 2]);
+
                     DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j + 2].transform.position);
                     AddToBalance(_gameBoard[i, j]);
                 }
             }
         }
 
-        //diagonal right-Left
+        // Diagonal Right-Left
         for (int i = 0; i < boardHeight - 2; i++)
         {
             for (int j = 2; j < boardWidth; j++)
             {
                 if (AreMatching(_gameBoard[i, j], _gameBoard[i + 1, j - 1], _gameBoard[i + 2, j - 2]))
                 {
+                    TriggerExplosion(_gameBoard[i, j]);
+                    TriggerExplosion(_gameBoard[i + 1, j - 1]);
+                    TriggerExplosion(_gameBoard[i + 2, j - 2]);
+
                     DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j - 2].transform.position);
                     AddToBalance(_gameBoard[i, j]);
                 }
             }
         }
 
-        //multiplier 
+        // Multiplier column match
         for (int col = 0; col < boardWidth; col++)
         {
             string targetName = _gameBoard[0, col].name;
@@ -173,14 +191,13 @@ public class GameManager : MonoBehaviour
             if (isFullMultiplierColumn)
             {
                 Debug.Log($"💥 JACKPOT! Column {col} has 5 matching multipliers: {targetName}");
-
                 Vector3 start = _gameBoard[0, col].transform.position;
                 Vector3 end = _gameBoard[boardHeight - 1, col].transform.position;
-                DrawLine(start, end, Color.green); // Green for jackpot
+                DrawLine(start, end, Color.green);
             }
         }
 
-        //bonus
+        // Bonus symbol match
         bool isFiveBonusAcross = true;
         GameObject[] bonusPositions = new GameObject[boardWidth];
 
@@ -226,6 +243,29 @@ public class GameManager : MonoBehaviour
             UpdateBalanceUI();
         }
     }
+
+        private void TriggerExplosion(GameObject piece)
+    {
+        // допустим, вместо particle ты инстанциируешь анимацию:
+        GameObject anim = Instantiate(explosionPrefab, piece.transform.position, Quaternion.identity);
+
+        // вычислим длину анимации из AnimatorController (если там один клип):
+        Animator animator = anim.GetComponent<Animator>();
+        if (animator != null && animator.runtimeAnimatorController != null)
+        {
+            var clips = animator.runtimeAnimatorController.animationClips;
+            if (clips.Length > 0)
+            {
+                float clipLength = clips[0].length;
+                Destroy(anim, clipLength);
+                return;
+            }
+        }
+
+        // fallback: если нет Animator или не смогли вычислить длительность
+        Destroy(anim, 1f);
+    }
+
     private void UpdateBalanceUI()
     {
         if (balanceText != null)
@@ -250,8 +290,9 @@ public class GameManager : MonoBehaviour
         {
             betAmount -= 5f;
             UpdateBetUI();
-        }else{
-            //Message about minimum bet amount
+        }
+        else
+        {
             Debug.Log("Minimum bet amount reached.");
         }
     }
@@ -267,7 +308,6 @@ public class GameManager : MonoBehaviour
         if (aInfo == null || bInfo == null || cInfo == null)
             return false;
 
-        //not include in matching
         if (aInfo.isMultiplier || bInfo.isMultiplier || cInfo.isMultiplier ||
             aInfo.isBonus || bInfo.isBonus || cInfo.isBonus)
             return false;
