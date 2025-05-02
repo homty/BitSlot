@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 
@@ -104,9 +105,9 @@ public class GameManager : MonoBehaviour
             {
                 if (AreMatching(_gameBoard[i, j], _gameBoard[i, j + 1], _gameBoard[i, j + 2]))
                 {
-                    TriggerExplosion(_gameBoard[i, j]);
-                    TriggerExplosion(_gameBoard[i, j + 1]);
-                    TriggerExplosion(_gameBoard[i, j + 2]);
+                    StartCoroutine(AnimateMatchEffect(_gameBoard[i, j], 0.1f));
+                    StartCoroutine(AnimateMatchEffect(_gameBoard[i, j + 1], 0.1f));
+                    StartCoroutine(AnimateMatchEffect(_gameBoard[i, j + 2], 0.1f));
 
                     DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i, j + 2].transform.position);
                     AddToBalance(_gameBoard[i, j]);
@@ -121,9 +122,9 @@ public class GameManager : MonoBehaviour
             {
                 if (AreMatching(_gameBoard[i, j], _gameBoard[i + 1, j], _gameBoard[i + 2, j]))
                 {
-                    TriggerExplosion(_gameBoard[i, j]);
-                    TriggerExplosion(_gameBoard[i + 1, j]);
-                    TriggerExplosion(_gameBoard[i + 2, j]);
+                    StartCoroutine(AnimateMatchEffect(_gameBoard[i, j], 0.1f));
+                    StartCoroutine(AnimateMatchEffect(_gameBoard[i + 1, j], 0.1f));
+                    StartCoroutine(AnimateMatchEffect(_gameBoard[i + 2, j], 0.1f));
 
                     DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j].transform.position);
                     AddToBalance(_gameBoard[i, j]);
@@ -138,9 +139,9 @@ public class GameManager : MonoBehaviour
             {
                 if (AreMatching(_gameBoard[i, j], _gameBoard[i + 1, j + 1], _gameBoard[i + 2, j + 2]))
                 {
-                    TriggerExplosion(_gameBoard[i, j]);
-                    TriggerExplosion(_gameBoard[i + 1, j + 1]);
-                    TriggerExplosion(_gameBoard[i + 2, j + 2]);
+                    StartCoroutine(AnimateMatchEffect(_gameBoard[i, j], 0.1f));
+                    StartCoroutine(AnimateMatchEffect(_gameBoard[i + 1, j + 1], 0.1f));
+                    StartCoroutine(AnimateMatchEffect(_gameBoard[i + 2, j + 2], 0.1f));
 
                     DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j + 2].transform.position);
                     AddToBalance(_gameBoard[i, j]);
@@ -155,9 +156,9 @@ public class GameManager : MonoBehaviour
             {
                 if (AreMatching(_gameBoard[i, j], _gameBoard[i + 1, j - 1], _gameBoard[i + 2, j - 2]))
                 {
-                    TriggerExplosion(_gameBoard[i, j]);
-                    TriggerExplosion(_gameBoard[i + 1, j - 1]);
-                    TriggerExplosion(_gameBoard[i + 2, j - 2]);
+                    StartCoroutine(AnimateMatchEffect(_gameBoard[i, j], 0.1f));
+                    StartCoroutine(AnimateMatchEffect(_gameBoard[i + 1, j - 1], 0.1f));
+                    StartCoroutine(AnimateMatchEffect(_gameBoard[i + 2, j - 2], 0.1f));
 
                     DrawLine(_gameBoard[i, j].transform.position, _gameBoard[i + 2, j - 2].transform.position);
                     AddToBalance(_gameBoard[i, j]);
@@ -191,6 +192,12 @@ public class GameManager : MonoBehaviour
             if (isFullMultiplierColumn)
             {
                 Debug.Log($"💥 JACKPOT! Column {col} has 5 matching multipliers: {targetName}");
+
+                for (int row = 0; row < boardHeight; row++)
+                {
+                    StartCoroutine(AnimateMatchEffect(_gameBoard[row, col], 0.1f));
+                }
+
                 Vector3 start = _gameBoard[0, col].transform.position;
                 Vector3 end = _gameBoard[boardHeight - 1, col].transform.position;
                 DrawLine(start, end, Color.green);
@@ -228,11 +235,21 @@ public class GameManager : MonoBehaviour
         if (isFiveBonusAcross)
         {
             Debug.Log("🎁 BONUS MATCH! 5 bonus symbols from left to right across columns!");
+
+            foreach (GameObject bonusPiece in bonusPositions)
+            {
+                if (bonusPiece != null)
+                {
+                    StartCoroutine(AnimateMatchEffect(bonusPiece, 0.1f));
+                }
+            }
+
             Vector3 start = bonusPositions[0].transform.position;
             Vector3 end = bonusPositions[boardWidth - 1].transform.position;
             DrawLine(start, end, Color.yellow);
         }
     }
+
 
     private void AddToBalance(GameObject piece)
     {
@@ -324,6 +341,50 @@ public class GameManager : MonoBehaviour
 
         return a.name == b.name && b.name == c.name;
     }
+
+    private System.Collections.IEnumerator AnimateMatchEffect(GameObject piece, float delay)
+    {
+        if (piece == null) yield break;
+
+        Vector3 originalScale = piece.transform.localScale;
+        Vector3 targetScale = originalScale * 1.2f;
+
+        float elapsedTime = 0f;
+        float duration = 0.3f;
+
+        // Scale up
+        while (elapsedTime < duration)
+        {
+            piece.transform.localScale = Vector3.Lerp(originalScale, targetScale, (elapsedTime / duration));
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // Shake
+        float shakeDuration = 0.3f;
+        float shakeMagnitude = 0.05f;
+        elapsedTime = 0f;
+
+        Vector3 originalPos = piece.transform.position;
+
+        while (elapsedTime < shakeDuration)
+        {
+            Vector3 randomOffset = Random.insideUnitSphere * shakeMagnitude;
+            piece.transform.position = originalPos + randomOffset;
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // Reset position & scale
+        piece.transform.position = originalPos;
+        piece.transform.localScale = originalScale;
+
+        // Trigger explosion
+        TriggerExplosion(piece);
+
+        yield return new WaitForSeconds(delay);
+    }
+
 
     private void DrawLine(Vector3 start, Vector3 end, Color? colorOverride = null)
     {
