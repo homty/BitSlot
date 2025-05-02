@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float betAmount = 1f;
     [SerializeField] private float minBetAmount = 1f;
     [SerializeField] private TextMeshProUGUI betText;
-    [SerializeField] private GameObject explosionPrefab; // 💥 Explosion prefab reference
+    [SerializeField] private GameObject explosionPrefab;
 
     private List<Vector2Int> matchedPositions = new List<Vector2Int>();
     private GameObject _board;
@@ -179,8 +179,6 @@ public class GameManager : MonoBehaviour
 
             if (isFullMultiplierColumn)
             {
-                Debug.Log($"💥 JACKPOT! Column {col} has 5 matching multipliers: {targetName}");
-
                 for (int row = 0; row < boardHeight; row++)
                 {
                     StartCoroutine(AnimateMatchEffect(_gameBoard[row, col], 0.1f));
@@ -218,8 +216,6 @@ public class GameManager : MonoBehaviour
 
         if (isFiveBonusAcross)
         {
-            Debug.Log("🎁 BONUS MATCH! 5 bonus symbols from left to right across columns!");
-
             foreach (GameObject bonusPiece in bonusPositions)
             {
                 if (bonusPiece != null)

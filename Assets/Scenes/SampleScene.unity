@@ -865,7 +865,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 6.6, y: -187.87}
+  m_AnchoredPosition: {x: 5.8, y: -187.8}
   m_SizeDelta: {x: 42.9344, y: 39.347}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &567770867
@@ -915,8 +915,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 12
-  m_fontSizeBase: 12
+  m_fontSize: 13
+  m_fontSizeBase: 13
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1707,7 +1707,7 @@ GameObject:
   - component: {fileID: 1053179835}
   - component: {fileID: 1053179834}
   m_Layer: 0
-  m_Name: Buttons 2_0
+  m_Name: BalanceBox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1991,7 +1991,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -149.06465, y: -206}
+  m_AnchoredPosition: {x: -149.06465, y: -205.76}
   m_SizeDelta: {x: 150.8828, y: 46}
   m_Pivot: {x: 0.5, y: 0.49999994}
 --- !u!114 &1182505626
@@ -2041,8 +2041,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 12.5
-  m_fontSizeBase: 12.5
+  m_fontSize: 13
+  m_fontSizeBase: 13
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2416,7 +2416,7 @@ GameObject:
   - component: {fileID: 1341665408}
   - component: {fileID: 1341665407}
   m_Layer: 0
-  m_Name: Buttons 2_1
+  m_Name: BetBox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2990,7 +2990,7 @@ GameObject:
   - component: {fileID: 1721274650}
   - component: {fileID: 1721274649}
   m_Layer: 0
-  m_Name: Background_0
+  m_Name: Playground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
