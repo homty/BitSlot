@@ -381,7 +381,8 @@ public class GameManager : MonoBehaviour
 
         // Trigger explosion
         TriggerExplosion(piece);
-
+        Destroy(piece);
+        
         yield return new WaitForSeconds(delay);
     }
 
