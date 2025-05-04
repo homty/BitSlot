@@ -105,3 +105,4 @@ MonoBehaviour:
   multiplierValue: 1
   isBonus: 0
   tokenColor: {r: 0, g: 0.92549026, b: 1, a: 1}
+  visualTransform: {fileID: 3311055209541293088}

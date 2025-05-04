@@ -2931,7 +2931,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 771841487}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: DecreaseBet
+        m_MethodName: Spin
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

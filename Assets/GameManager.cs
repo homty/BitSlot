@@ -37,6 +37,8 @@ public class GameManager : MonoBehaviour
                 thisPiece.name = pieceType.name;
                 thisPiece.transform.parent = gridPosition.transform;
                 _gameBoard[i, j] = thisPiece;
+
+                StartCoroutine(AnimateAppearance(thisPiece));
             }
         }
     }
@@ -66,27 +68,41 @@ public class GameManager : MonoBehaviour
         return gamePieces[gamePieces.Length - 1];
     }
 
-    public void Spin()
+        public void Spin()
     {
+        StartCoroutine(SpinRoutine());
+    }
+
+    private IEnumerator SpinRoutine()
+    {
+        List<Coroutine> animations = new List<Coroutine>();
+
         for (int i = 0; i < boardHeight; i++)
         {
             for (int j = 0; j < boardWidth; j++)
             {
                 GameObject gridPosition = _board.transform.Find(i + " " + j).gameObject;
+
                 if (gridPosition.transform.childCount > 0)
-                {
                     Destroy(gridPosition.transform.GetChild(0).gameObject);
-                }
 
                 GameObject pieceType = GetRandomPiece();
                 GameObject thisPiece = Instantiate(pieceType, gridPosition.transform.position + _offset, Quaternion.identity);
                 thisPiece.name = pieceType.name;
                 thisPiece.transform.parent = gridPosition.transform;
                 _gameBoard[i, j] = thisPiece;
+
+                animations.Add(StartCoroutine(AnimateAppearance(thisPiece)));
             }
         }
 
-        CheckForMatches();
+        // Подождём пока все анимации завершатся
+        foreach (var anim in animations)
+            yield return anim;
+
+        yield return new WaitForSeconds(0.2f); // маленькая задержка (по желанию)
+
+        CheckForMatches(); // ✅ Теперь вызывается после появления всех символов
     }
 
     private void CheckForMatches()
@@ -405,11 +421,33 @@ public class GameManager : MonoBehaviour
             thisPiece.name = pieceType.name;
             thisPiece.transform.parent = gridPosition.transform;
             _gameBoard[pos.x, pos.y] = thisPiece;
+
+            StartCoroutine(AnimateAppearance(thisPiece));
         }
 
         matchedPositions.Clear();
-
-        yield return new WaitForSeconds(0.3f); 
+        matchedPositions.Clear();
+        yield return new WaitForSeconds(0.5f);
         CheckForMatches();
+    }
+
+        private IEnumerator AnimateAppearance(GameObject piece)
+    {
+        if (piece == null) yield break;
+
+        Vector3 targetScale = piece.transform.localScale; // This could be (0.25, 0.25, 0.25) or (0.5, 0.5, 0.5)
+        piece.transform.localScale = Vector3.zero;        // Start at scale 0 (invisible)
+
+        float elapsedTime = 0f;
+        float duration = 0.3f;
+
+        while (elapsedTime < duration)
+        {
+            piece.transform.localScale = Vector3.Lerp(Vector3.zero, targetScale, elapsedTime / duration);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        piece.transform.localScale = targetScale; // Ensure final scale is exactly correct
     }
 }
