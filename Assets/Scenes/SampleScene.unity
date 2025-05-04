@@ -838,7 +838,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0.08627451, g: 0.050980397, b: 0.18039216, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -1826,17 +1826,17 @@ MonoBehaviour:
   - {fileID: 448591179285133491, guid: f0e4b01ec9a63ad4a93050ac648937d6, type: 3}
   - {fileID: 995885358386697908, guid: 2e36b710b7e553947b2d32b0d57639a7, type: 3}
   spawnChances:
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
-  - 0
+  - 6
+  - 8
+  - 10
+  - 12
+  - 14
+  - 16
   - 32
-  - 32
-  - 32
-  - 0
+  - 20
+  - 13
+  - 8
+  - 5
   balanceText: {fileID: 1182505626}
   betAmount: 10
   minBetAmount: 10

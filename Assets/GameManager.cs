@@ -19,7 +19,8 @@ public class GameManager : MonoBehaviour
     private GameObject _board;
     private GameObject[,] _gameBoard;
     private Vector3 _offset = new Vector3(0, 0, -1);
-    
+    private HashSet<int> appliedMultipliers = new HashSet<int>();
+    private int currentMultiplier = 1;
     private void LoadBalance()
     {
         if (PlayerPrefs.HasKey("PlayerBalance"))
@@ -78,6 +79,10 @@ public class GameManager : MonoBehaviour
 
         public void Spin()
     {
+        currentMultiplier = 1;
+        MultiplierValue.text = "x1";
+
+        appliedMultipliers.Clear();
         if (playerBalance < betAmount)
         {
             Debug.Log("Not enough balance to spin.");
@@ -211,12 +216,26 @@ public class GameManager : MonoBehaviour
 
             if (isFullMultiplierColumn)
             {
-                for (int row = 0; row < boardHeight; row++)
+                SymbolInfo info = _gameBoard[0, col].GetComponent<SymbolInfo>();
+                if (info != null && info.isMultiplier)
                 {
-                    StartCoroutine(AnimateMatchEffect(_gameBoard[row, col], 0.1f));
-                }
+                    int multiplierValue = info.multiplierValue;
 
+                    if (!appliedMultipliers.Contains(multiplierValue))
+                    {
+                        // показываем анимацию на всю колонку
+                        for (int row = 0; row < boardHeight; row++)
+                            StartCoroutine(AnimateMatchEffect(_gameBoard[row, col], 0.1f));
+
+                        // применяем множитель только если ещё не был
+                        appliedMultipliers.Add(multiplierValue);
+                        currentMultiplier *= multiplierValue;
+                        MultiplierValue.text = $"x{currentMultiplier}";
+                    }
+                }
             }
+
+
         }
 
         bool isFiveBonusAcross = true;
