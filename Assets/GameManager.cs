@@ -13,17 +13,25 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float minBetAmount = 1f;
     [SerializeField] private TextMeshProUGUI betText;
     [SerializeField] private GameObject explosionPrefab;
-
+    [SerializeField] private float playerBalance = 100f;
+    [SerializeField] private TextMeshProUGUI MultiplierValue;
     private List<Vector2Int> matchedPositions = new List<Vector2Int>();
     private GameObject _board;
     private GameObject[,] _gameBoard;
     private Vector3 _offset = new Vector3(0, 0, -1);
-    private float playerBalance = 0f;
-
+    
+    private void LoadBalance()
+    {
+        if (PlayerPrefs.HasKey("PlayerBalance"))
+        {
+            playerBalance = PlayerPrefs.GetFloat("PlayerBalance");
+        }
+    }
     void Start()
     {
         _board = GameObject.Find("GameBoard");
         _gameBoard = new GameObject[boardHeight, boardWidth];
+        LoadBalance();
         UpdateBalanceUI();
         UpdateBetUI();
 
@@ -70,6 +78,14 @@ public class GameManager : MonoBehaviour
 
         public void Spin()
     {
+        if (playerBalance < betAmount)
+        {
+            Debug.Log("Not enough balance to spin.");
+            return;
+        }
+
+        playerBalance -= betAmount;
+        UpdateBalanceUI();
         StartCoroutine(SpinRoutine());
     }
 
@@ -450,4 +466,16 @@ public class GameManager : MonoBehaviour
 
         piece.transform.localScale = targetScale; // Ensure final scale is exactly correct
     }
+
+    private void SaveBalance()
+    {
+        PlayerPrefs.SetFloat("PlayerBalance", playerBalance);
+        PlayerPrefs.Save(); // Optional, but ensures it's written immediately
+    }
+
+    private void OnApplicationQuit()
+    {
+        SaveBalance();
+    }
+
 }
