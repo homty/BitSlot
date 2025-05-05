@@ -30,6 +30,7 @@ public class GameManager : MonoBehaviour
     private float winningsThisSpin = 0f;
     private Coroutine winningsAnimationCoroutine;
     private bool hasAppliedWinnings = false;
+    private Vector3 winningsOriginalScale;
 
     private void LoadBalance()
     {
@@ -40,6 +41,7 @@ public class GameManager : MonoBehaviour
     }
     void Start()
     {
+        winningsOriginalScale = winningsText.rectTransform.localScale;
         _board = GameObject.Find("GameBoard");
         _gameBoard = new GameObject[boardHeight, boardWidth];
         LoadBalance();
@@ -654,22 +656,21 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator AnimateWinnings(float from, float to, float duration)
     {
-        // Animation for scaling up and shaking the text
-        Vector3 originalScale = winningsText.rectTransform.localScale;
-        Vector3 largeScale = originalScale * 1.5f; // Make it bigger for the animation
+        Vector3 largeScale = winningsOriginalScale * 1.5f;
 
-        // Scale up
         float elapsed = 0f;
         while (elapsed < duration)
         {
             float current = Mathf.Lerp(from, to, elapsed / duration);
             winningsText.text = $"{current:F2}";
-            winningsText.rectTransform.localScale = Vector3.Lerp(originalScale, largeScale, elapsed / duration);
+            winningsText.rectTransform.localScale = Vector3.Lerp(winningsOriginalScale, largeScale, elapsed / duration);
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        // Shake effect
+        winningsText.text = $"{to:F2}";
+        winningsText.rectTransform.localScale = largeScale;
+
         float shakeTime = 0.3f;
         float shakeMagnitude = 5f;
         elapsed = 0f;
@@ -683,19 +684,7 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
-        // Set final value and reset position
-        winningsText.text = $"{to:F2}";
         winningsText.rectTransform.anchoredPosition = originalPosition;
-
-        // Scale back to original
-        elapsed = 0f;
-        while (elapsed < duration)
-        {
-            winningsText.rectTransform.localScale = Vector3.Lerp(largeScale, originalScale, elapsed / duration);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        winningsText.rectTransform.localScale = originalScale;
+        winningsText.rectTransform.localScale = winningsOriginalScale;
     }
 }
