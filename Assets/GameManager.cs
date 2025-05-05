@@ -31,7 +31,8 @@ public class GameManager : MonoBehaviour
     private Coroutine winningsAnimationCoroutine;
     private bool hasAppliedWinnings = false;
     private Vector3 winningsOriginalScale;
-
+    private Coroutine BalanceAnimationCoroutine;
+    private  float balanceBefore = 0f;
     private void LoadBalance()
     {
         if (PlayerPrefs.HasKey("PlayerBalance"))
@@ -146,16 +147,12 @@ public class GameManager : MonoBehaviour
                 animations.Add(StartCoroutine(AnimateAppearance(thisPiece)));
             }
         }
-
-        // Подождём пока все анимации завершатся
         foreach (var anim in animations)
             yield return anim;
 
         yield return new WaitForSeconds(0.2f);
-        
-        
 
-        CheckForMatches(); // ✅ Теперь вызывается после появления всех символов
+        CheckForMatches();
     }
 
     private void CheckForMatches()
@@ -255,11 +252,8 @@ public class GameManager : MonoBehaviour
 
                     if (!appliedMultipliers.Contains(multiplierValue))
                     {
-                        // показываем анимацию на всю колонку
                         for (int row = 0; row < boardHeight; row++)
                             StartCoroutine(AnimateMatchEffect(_gameBoard[row, col], 0.1f));
-
-                        // применяем множитель только если ещё не был
                         appliedMultipliers.Add(multiplierValue);
                         currentMultiplier *= multiplierValue;
                         StartCoroutine(AnimateMultiplierUI());
@@ -319,8 +313,9 @@ public class GameManager : MonoBehaviour
         SymbolInfo info = piece.GetComponent<SymbolInfo>();
         if (info != null && !info.isMultiplier && !info.isBonus)
         {
-            float winAmount = info.value * betAmount * currentMultiplier;
+            float winAmount = info.value * betAmount;
             winningsThisSpin += winAmount;
+//          Debug.Log($"[Total Winnings So Far] {winningsThisSpin} USDT (before multiplier)");
             if (winningsText != null)
             {
                 if (winningsAnimationCoroutine != null)
@@ -328,7 +323,7 @@ public class GameManager : MonoBehaviour
 
                 winningsAnimationCoroutine = StartCoroutine(AnimateWinnings(0f, winningsThisSpin, 1.5f));
             }
-//          playerBalance += winAmount;
+
             UpdateBalanceUI();
         }
     }
@@ -362,7 +357,7 @@ public class GameManager : MonoBehaviour
         Destroy(explosion, 1f);
     }
 
-    private void UpdateBalanceUI()
+   private void UpdateBalanceUI()
     {
         if (balanceText != null)
             balanceText.text = $"{playerBalance:F2}USDT";
@@ -389,7 +384,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("Minimum bet amount reached.");
+            Debug.Log("Minimum bet amount reached."); //add some UI feedback here
         }
     }
 
@@ -505,7 +500,6 @@ public class GameManager : MonoBehaviour
         }
 
         matchedPositions.Clear();
-        matchedPositions.Clear();
         yield return new WaitForSeconds(0.5f);
         CheckForMatches();
 
@@ -513,19 +507,38 @@ public class GameManager : MonoBehaviour
 
         if (!hasAppliedWinnings && winningsThisSpin > 0f)
         {
+//          Debug.Log($"[Before Multiplier] Total winnings: {winningsThisSpin} USDT");
+//          Debug.Log($"[Multiplier] Current multiplier: x{currentMultiplier}");
+            if (currentMultiplier > 1)
+            {
+                winningsThisSpin *= currentMultiplier;
+                StartCoroutine(EndSpinCoroutine());
+            }
+            
+//          Debug.Log($"[After Multiplier] Final winnings added to balance: {winningsThisSpin} USDT");
+            balanceBefore = playerBalance;
             playerBalance += winningsThisSpin;
+
+            if (BalanceAnimationCoroutine != null)
+                StopCoroutine(BalanceAnimationCoroutine);
+
+            float targetBalance = playerBalance;
+
+            BalanceAnimationCoroutine = StartCoroutine(AnimateBalance(balanceBefore, targetBalance, 2f));
+
             UpdateBalanceUI();
             SaveBalance();
             hasAppliedWinnings = true;
         }
+            
     }
 
         private IEnumerator AnimateAppearance(GameObject piece)
     {
         if (piece == null) yield break;
 
-        Vector3 targetScale = piece.transform.localScale; // This could be (0.25, 0.25, 0.25) or (0.5, 0.5, 0.5)
-        piece.transform.localScale = Vector3.zero;        // Start at scale 0 (invisible)
+        Vector3 targetScale = piece.transform.localScale;
+        piece.transform.localScale = Vector3.zero; 
 
         float elapsedTime = 0f;
         float duration = 0.3f;
@@ -537,13 +550,13 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
-        piece.transform.localScale = targetScale; // Ensure final scale is exactly correct
+        piece.transform.localScale = targetScale;
     }
 
     private void SaveBalance()
     {
         PlayerPrefs.SetFloat("PlayerBalance", playerBalance);
-        PlayerPrefs.Save(); // Optional, but ensures it's written immediately
+        PlayerPrefs.Save();
     }
 
     private void OnApplicationQuit()
@@ -556,7 +569,6 @@ public class GameManager : MonoBehaviour
         Vector3 originalScale = MultiplierValue.rectTransform.localScale;
         Vector3 largeScale = originalScale * 2f;
 
-        // Увеличение
         float duration = 0.3f;
         float elapsedTime = 0f;
         while (elapsedTime < duration)
@@ -566,11 +578,10 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
-        // Потрясывание
         float shakeTime = 0.3f;
         float shakeMagnitude = 5f;
         elapsedTime = 0f;
-        Vector2 originalPosition = MultiplierValue.rectTransform.anchoredPosition; // Убедись, что это Vector2
+        Vector2 originalPosition = MultiplierValue.rectTransform.anchoredPosition;
 
         while (elapsedTime < shakeTime)
         {
@@ -580,9 +591,8 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
         MultiplierValue.text = $"x{currentMultiplier}";
-        MultiplierValue.rectTransform.anchoredPosition = originalPosition; // Вернуть на исходную позицию
+        MultiplierValue.rectTransform.anchoredPosition = originalPosition;
 
-        // Возврат к нормальному масштабу
         elapsedTime = 0f;
         while (elapsedTime < duration)
         {
@@ -598,9 +608,8 @@ public class GameManager : MonoBehaviour
     private IEnumerator AnimateFreeSpinUI()
     {
         Vector3 originalScale = freeSpinText.rectTransform.localScale;
-        Vector3 largeScale = originalScale * 1.5f; // Make it bigger for the animation
+        Vector3 largeScale = originalScale * 1.5f;
 
-        // Increase the scale
         float duration = 0.3f;
         float elapsedTime = 0f;
         while (elapsedTime < duration)
@@ -610,7 +619,6 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
-        // Shake effect
         float shakeTime = 0.3f;
         float shakeMagnitude = 5f;
         elapsedTime = 0f;
@@ -624,10 +632,9 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
         UpdateFreeSpinUI();
-        // Reset the position
+
         freeSpinText.rectTransform.anchoredPosition = originalPosition;
 
-        // Reset scale back to original
         elapsedTime = 0f;
         while (elapsedTime < duration)
         {
@@ -687,4 +694,42 @@ public class GameManager : MonoBehaviour
         winningsText.rectTransform.anchoredPosition = originalPosition;
         winningsText.rectTransform.localScale = winningsOriginalScale;
     }
+
+    private IEnumerator EndSpinCoroutine()
+    {
+        float baseGain = winningsThisSpin;
+        float multipliedGain = baseGain * currentMultiplier;
+
+        Debug.Log($"[DEBUG] Base Gain: {baseGain}, Multiplier: {currentMultiplier}, After Mult: {multipliedGain}");
+
+        winningsText.text = $"{baseGain:F2}";
+
+        Coroutine gainAnim = StartCoroutine(AnimateWinnings(baseGain, multipliedGain, 1f));
+        Coroutine multiplierAnim = StartCoroutine(AnimateMultiplierUI());
+
+        yield return gainAnim;
+
+        playerBalance += multipliedGain;
+        PlayerPrefs.SetFloat("Balance", playerBalance);
+        currentMultiplier = 1;
+        MultiplierValue.text = "x1";
+
+//      Debug.Log($"[DEBUG] Final Balance: {playerBalance}");
+        UpdateBalanceUI();
+    }
+
+    private IEnumerator AnimateBalance(float from, float to, float duration)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float current = Mathf.Lerp(from, to, elapsed / duration);
+            balanceText.text = $"{current:F2}USDT";
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        balanceText.text = $"{playerBalance:F2}USDT";
+    }
+    
 }
