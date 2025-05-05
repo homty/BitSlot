@@ -291,8 +291,8 @@ Transform:
   m_LocalScale: {x: 1, y: 0.37350667, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1255284041}
   - {fileID: 417706226}
+  - {fileID: 1255284041}
   m_Father: {fileID: 1954913108}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &297110547
@@ -919,16 +919,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 539368375}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 2.6773283, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2084915358}
+  m_Father: {fileID: 788589221}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 273.9, y: -64.29}
+  m_AnchoredPosition: {x: 745.3369, y: 556.1378}
   m_SizeDelta: {x: 65.7632, y: 13.5008}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &539368377
@@ -951,7 +951,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 2
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
   m_sharedMaterial: {fileID: -1595600875855051688, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
@@ -1826,24 +1826,27 @@ MonoBehaviour:
   - {fileID: 448591179285133491, guid: f0e4b01ec9a63ad4a93050ac648937d6, type: 3}
   - {fileID: 995885358386697908, guid: 2e36b710b7e553947b2d32b0d57639a7, type: 3}
   spawnChances:
+  - 4
   - 6
-  - 8
+  - 9
   - 10
-  - 12
-  - 14
-  - 16
-  - 32
+  - 21
   - 20
-  - 13
-  - 8
-  - 5
+  - 30
+  - 12
+  - 9
+  - 4
+  - 3
   balanceText: {fileID: 1182505626}
   betAmount: 10
   minBetAmount: 10
   betText: {fileID: 567770867}
   explosionPrefab: {fileID: 9150250158451832159, guid: c840ff2274d29124c9f11428d4a1ae3c, type: 3}
-  playerBalance: 0
+  playerBalance: 100
   MultiplierValue: {fileID: 1529800506}
+  freeSpinText: {fileID: 539368377}
+  winningsText: {fileID: 1255284042}
+  freeSpinsRemaining: 0
 --- !u!4 &771841488
 Transform:
   m_ObjectHideFlags: 0
@@ -1945,6 +1948,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 705819992}
+  - {fileID: 539368376}
   m_Father: {fileID: 1954913108}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &799075991
@@ -2853,7 +2857,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 200
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
   m_sharedMaterial: {fileID: -1595600875855051688, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
@@ -3477,7 +3481,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: x2
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
   m_sharedMaterial: {fileID: -1595600875855051688, guid: ea4325746a71921478d4c3a25e1c3832, type: 2}
@@ -4515,7 +4519,6 @@ RectTransform:
   - {fileID: 1341665408}
   - {fileID: 1053179835}
   - {fileID: 1954913108}
-  - {fileID: 539368376}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
