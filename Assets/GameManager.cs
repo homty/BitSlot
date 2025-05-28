@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] public TextMeshProUGUI freeSpinText;
     [SerializeField] private TextMeshProUGUI winningsText;
 
+    private bool rewardSoundPlayedThisSpin = false;
     public int freeSpinsRemaining = 0;
     private bool isFreeSpinActive = false;
     private List<Vector2Int> matchedPositions = new List<Vector2Int>();
@@ -92,6 +93,8 @@ public class GameManager : MonoBehaviour
 
     public void Spin()
     {
+        AudioManager.Instance.PlaySpinClick();
+        rewardSoundPlayedThisSpin = false;
         winningsThisSpin = 0f;
         hasAppliedWinnings = false;
         if (winningsText != null){
@@ -323,7 +326,10 @@ public class GameManager : MonoBehaviour
 
                 winningsAnimationCoroutine = StartCoroutine(AnimateWinnings(0f, winningsThisSpin, 1.5f));
             }
+            if (!rewardSoundPlayedThisSpin)
 
+            AudioManager.Instance.PlayRewardSound();
+            
             UpdateBalanceUI();
         }
     }
@@ -461,6 +467,7 @@ public class GameManager : MonoBehaviour
 
         if (foundRow != -1 && foundCol != -1)
         {
+            AudioManager.Instance.PlayDisappearSound();
             Destroy(piece);
             _gameBoard[foundRow, foundCol] = null;
         }
@@ -533,7 +540,7 @@ public class GameManager : MonoBehaviour
             
     }
 
-        private IEnumerator AnimateAppearance(GameObject piece)
+    private IEnumerator AnimateAppearance(GameObject piece)
     {
         if (piece == null) yield break;
 
