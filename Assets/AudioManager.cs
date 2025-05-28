@@ -8,6 +8,9 @@ public class AudioManager : MonoBehaviour
     public AudioClip spinClickClip;
     public AudioClip rewardClip;
     public AudioClip balanceClip;
+    public AudioClip endingRewardClip;
+    public AudioClip MultiplierAppearClip;
+    public AudioClip multiplyRewardClip;
     private float lastRewardSoundTime = -10f;
     private float rewardSoundCooldown = 0.2f;
 
@@ -38,7 +41,7 @@ public class AudioManager : MonoBehaviour
         if (matchDisappearClip != null)
             audioSource.PlayOneShot(matchDisappearClip);
     }
-    
+
     public void PlayRewardSound()
     {
         if (rewardClip != null && Time.time - lastRewardSoundTime > rewardSoundCooldown)
@@ -52,6 +55,24 @@ public class AudioManager : MonoBehaviour
     {
         if (balanceClip != null)
             audioSource.PlayOneShot(balanceClip);
+    }
+
+    public void PlayEndingRewardSound()
+    {
+        if (endingRewardClip != null)
+            audioSource.PlayOneShot(endingRewardClip);
+    }
+
+    public void PlayMultiplierAppearSound()
+    {
+        if (MultiplierAppearClip != null)
+            audioSource.PlayOneShot(MultiplierAppearClip);
+    }
+    
+    public void PlayMultiplyRewardSound()
+    {
+        if (multiplyRewardClip != null)
+            audioSource.PlayOneShot(multiplyRewardClip);
     }
 
 }

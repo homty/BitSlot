@@ -329,7 +329,7 @@ public class GameManager : MonoBehaviour
             if (!rewardSoundPlayedThisSpin)
 
             AudioManager.Instance.PlayRewardSound();
-            
+
             UpdateBalanceUI();
         }
     }
@@ -599,7 +599,7 @@ public class GameManager : MonoBehaviour
         }
         MultiplierValue.text = $"x{currentMultiplier}";
         MultiplierValue.rectTransform.anchoredPosition = originalPosition;
-
+        AudioManager.Instance.PlayMultiplierAppearSound();
         elapsedTime = 0f;
         while (elapsedTime < duration)
         {
@@ -689,7 +689,7 @@ public class GameManager : MonoBehaviour
         float shakeMagnitude = 5f;
         elapsed = 0f;
         Vector2 originalPosition = winningsText.rectTransform.anchoredPosition;
-
+        AudioManager.Instance.PlayEndingRewardSound();
         while (elapsed < shakeTime)
         {
             Vector2 randomOffset = Random.insideUnitCircle * shakeMagnitude;
@@ -707,11 +707,11 @@ public class GameManager : MonoBehaviour
         float baseGain = winningsThisSpin;
         float multipliedGain = baseGain * currentMultiplier;
 
-        Debug.Log($"[DEBUG] Base Gain: {baseGain}, Multiplier: {currentMultiplier}, After Mult: {multipliedGain}");
 
         winningsText.text = $"{baseGain:F2}";
 
         Coroutine gainAnim = StartCoroutine(AnimateWinnings(baseGain, multipliedGain, 1f));
+        AudioManager.Instance.PlayMultiplyRewardSound();
         Coroutine multiplierAnim = StartCoroutine(AnimateMultiplierUI());
 
         yield return gainAnim;
@@ -719,7 +719,6 @@ public class GameManager : MonoBehaviour
         playerBalance += multipliedGain;
         PlayerPrefs.SetFloat("Balance", playerBalance);
         currentMultiplier = 1;
-        MultiplierValue.text = "x1";
 
 //      Debug.Log($"[DEBUG] Final Balance: {playerBalance}");
         UpdateBalanceUI();
