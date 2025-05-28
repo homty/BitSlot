@@ -44,6 +44,9 @@ TagManager:
   - name: Backgound
     uniqueID: 1033239093
     locked: 0
+  - name: BackgroundObject
+    uniqueID: 1741409321
+    locked: 0
   - name: SlotsBackground
     uniqueID: 3799668479
     locked: 0
