@@ -36,20 +36,13 @@ public class GameManager : MonoBehaviour
     private Vector3 winningsOriginalScale;
     private Coroutine BalanceAnimationCoroutine;
     private float balanceBefore = 0f;
-    private void LoadBalance()
-    {
-        if (PlayerPrefs.HasKey("PlayerBalance"))
-        {
-            playerBalance = PlayerPrefs.GetFloat("PlayerBalance");
-        }
-    }
     void Start()
     {   
         AudioManager.Instance.PlayBackgroundMusic();
         winningsOriginalScale = winningsText.rectTransform.localScale;
         _board = GameObject.Find("GameBoard");
         _gameBoard = new GameObject[boardHeight, boardWidth];
-        LoadBalance();
+        playerBalance = 10000f;
         UpdateBalanceUI();
         UpdateBetUI();
 
@@ -351,7 +344,6 @@ public class GameManager : MonoBehaviour
                     BalanceAnimationCoroutine = StartCoroutine(AnimateBalance(previousBalance, playerBalance, 1f));
 
                     UpdateBalanceUI();
-                    SaveBalance();
 
                     if (winningsAnimationCoroutine != null)
                         StopCoroutine(winningsAnimationCoroutine);
@@ -609,7 +601,6 @@ public class GameManager : MonoBehaviour
             BalanceAnimationCoroutine = StartCoroutine(AnimateBalance(balanceBefore, targetBalance, 1f));
 
             UpdateBalanceUI();
-            SaveBalance();
             hasAppliedWinnings = true;
         }
 
@@ -633,17 +624,6 @@ public class GameManager : MonoBehaviour
         }
 
         piece.transform.localScale = targetScale;
-    }
-
-    private void SaveBalance()
-    {
-        PlayerPrefs.SetFloat("PlayerBalance", playerBalance);
-        PlayerPrefs.Save();
-    }
-
-    private void OnApplicationQuit()
-    {
-        SaveBalance();
     }
 
     private IEnumerator AnimateMultiplierUI()
