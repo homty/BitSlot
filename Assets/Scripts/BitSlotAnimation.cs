@@ -24,8 +24,6 @@ public class BitSlotLogoAnimator : MonoBehaviour
         {
             originalPositions[i] = letters[i].position;
             spriteRenderers[i] = letters[i].GetComponent<SpriteRenderer>();
-
-            // Устанавливаем альфу в 0 (прозрачность)
             if (spriteRenderers[i] != null)
             {
                 Color color = spriteRenderers[i].color;
@@ -41,8 +39,6 @@ public class BitSlotLogoAnimator : MonoBehaviour
     {
         yield return StartCoroutine(FadeInAll());
         yield return StartCoroutine(PulseAll());
-
-        // Затем каждая буква падает по очереди
         foreach (Transform letter in letters)
         {
             yield return StartCoroutine(Fall(letter));
@@ -71,8 +67,6 @@ public class BitSlotLogoAnimator : MonoBehaviour
             elapsed += Time.deltaTime;
             yield return null;
         }
-
-        // Установим альфу точно на 1
         for (int i = 0; i < spriteRenderers.Length; i++)
         {
             if (spriteRenderers[i] != null)
@@ -96,8 +90,6 @@ public class BitSlotLogoAnimator : MonoBehaviour
         }
 
         float elapsed = 0f;
-
-        // Увеличение
         while (elapsed < pulseDuration)
         {
             float t = elapsed / pulseDuration;
@@ -110,8 +102,6 @@ public class BitSlotLogoAnimator : MonoBehaviour
         }
 
         elapsed = 0f;
-
-        // Обратно
         while (elapsed < pulseDuration)
         {
             float t = elapsed / pulseDuration;
@@ -123,7 +113,6 @@ public class BitSlotLogoAnimator : MonoBehaviour
             yield return null;
         }
 
-        // Финальный масштаб
         for (int i = 0; i < letters.Length; i++)
         {
             letters[i].localScale = originalScales[i];
@@ -135,7 +124,6 @@ public class BitSlotLogoAnimator : MonoBehaviour
         Vector3 startPos = letter.position;
         Vector3 endPos = startPos + Vector3.down * fallDistance;
         float elapsed = 0f;
-
         while (elapsed < fallDuration)
         {
             float t = elapsed / fallDuration;

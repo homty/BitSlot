@@ -26,13 +26,10 @@ public class AudioManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-
             audioSource = GetComponent<AudioSource>();
-
-            // Add a separate AudioSource for background music
             musicSource = gameObject.AddComponent<AudioSource>();
             musicSource.loop = true;
-            musicSource.volume = 0.5f; // Adjust volume as needed
+            musicSource.volume = 0.5f;
         }
         else
         {

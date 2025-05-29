@@ -36,6 +36,8 @@ public class GameManager : MonoBehaviour
     private Vector3 winningsOriginalScale;
     private Coroutine BalanceAnimationCoroutine;
     private float balanceBefore = 0f;
+    private bool allMatchesResolved = false;
+
     void Start()
     {   
         AudioManager.Instance.PlayBackgroundMusic();
@@ -132,6 +134,8 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator SpinRoutine()
     {
+        allMatchesResolved = false;
+
         List<Coroutine> animations = new List<Coroutine>();
 
         for (int i = 0; i < boardHeight; i++)
@@ -329,7 +333,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            if (!hasAppliedWinnings && winningsThisSpin > 0f)
+            if (!hasAppliedWinnings && winningsThisSpin > 0f && allMatchesResolved)
             {
                 if (currentMultiplier <= 1)
                 {
@@ -359,6 +363,7 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+
         if (spinButton != null)
                 spinButton.interactable = true;
     }
@@ -578,7 +583,7 @@ public class GameManager : MonoBehaviour
         yield return StartCoroutine(CheckForMatchesAndHandleEnd());
 
 
-
+        allMatchesResolved = true;
         if (!hasAppliedWinnings && winningsThisSpin > 0f)
         {
             //          Debug.Log($"[Before Multiplier] Total winnings: {winningsThisSpin} USDT");
@@ -603,7 +608,6 @@ public class GameManager : MonoBehaviour
             UpdateBalanceUI();
             hasAppliedWinnings = true;
         }
-
     }
 
     private IEnumerator AnimateAppearance(GameObject piece)
@@ -831,5 +835,3 @@ public class GameManager : MonoBehaviour
     }
     
 }
-
-
