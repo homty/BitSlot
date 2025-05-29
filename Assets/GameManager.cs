@@ -165,7 +165,8 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
 
         CheckForMatches();
-        yield return StartCoroutine(CheckForMatchesAndHandleEnd());
+        if (spinButton != null)
+            spinButton.interactable = true;
     }
 
     private void CheckForMatches()
