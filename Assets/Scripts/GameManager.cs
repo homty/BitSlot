@@ -321,6 +321,8 @@ public class GameManager : MonoBehaviour
                     StartCoroutine(AnimateMatchEffect(bonusPiece, 0.1f));
                 }
             }
+            if (spinButton != null)
+                spinButton.interactable = true;
         }
     }
 
@@ -788,9 +790,12 @@ public class GameManager : MonoBehaviour
         winningsText.rectTransform.anchoredPosition = originalPosition;
         winningsText.rectTransform.localScale = winningsOriginalScale;
     }
-    
+
     private IEnumerator CompleteFinalWinnings()
     {
+        if (spinButton != null)
+            spinButton.interactable = false;
+
         if (isFinalWinningsApplied || winningsThisSpin <= 0f) yield break;
 
         isFinalWinningsApplied = true;
@@ -816,6 +821,11 @@ public class GameManager : MonoBehaviour
 
         winningsThisSpin = 0f;
         currentMultiplier = 1;
+
+        yield return new WaitForSeconds(1f);
+
+        if (spinButton != null)
+            spinButton.interactable = true;
     }
 
 }
