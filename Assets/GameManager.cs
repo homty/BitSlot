@@ -338,30 +338,33 @@ public class GameManager : MonoBehaviour
         {
             if (!hasAppliedWinnings && winningsThisSpin > 0f)
             {
-                float finalWinnings = winningsThisSpin * currentMultiplier;
+                if (currentMultiplier <= 1)
+                {
+                    float finalWinnings = winningsThisSpin;
 
-                //              Debug.Log($"[SPIN RESULT] Winnings before multiplier: {winningsThisSpin:F2} USDT");
-                //              Debug.Log($"[SPIN RESULT] Multiplier: x{currentMultiplier}");
-                //              Debug.Log($"[SPIN RESULT] Final winnings: {finalWinnings:F2} USDT");
+                    if (BalanceAnimationCoroutine != null)
+                        StopCoroutine(BalanceAnimationCoroutine);
 
-                if (BalanceAnimationCoroutine != null)
-                    StopCoroutine(BalanceAnimationCoroutine);
+                    float previousBalance = playerBalance;
+                    playerBalance += finalWinnings;
 
-                float previousBalance = playerBalance;
-                playerBalance += finalWinnings;
-                //              Debug.Log($"[SPIN RESULT] Balance after win: {playerBalance:F2} USDT");
-                BalanceAnimationCoroutine = StartCoroutine(AnimateBalance(previousBalance, playerBalance, 1f));
+                    BalanceAnimationCoroutine = StartCoroutine(AnimateBalance(previousBalance, playerBalance, 1f));
 
-                UpdateBalanceUI();
-                SaveBalance();
+                    UpdateBalanceUI();
+                    SaveBalance();
 
-                if (winningsAnimationCoroutine != null)
-                    StopCoroutine(winningsAnimationCoroutine);
+                    if (winningsAnimationCoroutine != null)
+                        StopCoroutine(winningsAnimationCoroutine);
 
-                winningsAnimationCoroutine = StartCoroutine(AnimateWinningsToZero(finalWinnings, 1f));
+                    winningsAnimationCoroutine = StartCoroutine(AnimateWinningsToZero(finalWinnings, 1f));
 
-                hasAppliedWinnings = true;
-                winningsThisSpin = 0f;
+                    hasAppliedWinnings = true;
+                    winningsThisSpin = 0f;
+                }
+                else
+                {
+                    StartCoroutine(EndSpinCoroutine());
+                }
             }
         }
         if (spinButton != null)
