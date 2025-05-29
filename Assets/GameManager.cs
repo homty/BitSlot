@@ -17,7 +17,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI MultiplierValue;
     [SerializeField] public TextMeshProUGUI freeSpinText;
     [SerializeField] private TextMeshProUGUI winningsText;
-
+    
     private bool rewardSoundPlayedThisSpin = false;
     public int freeSpinsRemaining = 0;
     private bool isFreeSpinActive = false;
@@ -33,7 +33,7 @@ public class GameManager : MonoBehaviour
     private bool hasAppliedWinnings = false;
     private Vector3 winningsOriginalScale;
     private Coroutine BalanceAnimationCoroutine;
-    private  float balanceBefore = 0f;
+    private float balanceBefore = 0f;
     private void LoadBalance()
     {
         if (PlayerPrefs.HasKey("PlayerBalance"))
@@ -42,7 +42,8 @@ public class GameManager : MonoBehaviour
         }
     }
     void Start()
-    {
+    {   
+        AudioManager.Instance.PlayBackgroundMusic();
         winningsOriginalScale = winningsText.rectTransform.localScale;
         _board = GameObject.Find("GameBoard");
         _gameBoard = new GameObject[boardHeight, boardWidth];
@@ -97,10 +98,13 @@ public class GameManager : MonoBehaviour
         rewardSoundPlayedThisSpin = false;
         winningsThisSpin = 0f;
         hasAppliedWinnings = false;
-        if (winningsText != null){
+        if (winningsText != null)
+        {
             winningsText.text = "0.00";
-            }    
+        }
         hasGrantedFreeSpinsThisSpin = false;
+
+//      Debug.Log($"=== [SPIN START] Balance before spin: {playerBalance:F2} USDT");
 
         if (!isFreeSpinActive && playerBalance < betAmount)
         {
@@ -118,6 +122,7 @@ public class GameManager : MonoBehaviour
         {
             isFreeSpinActive = false;
             playerBalance -= betAmount;
+//           Debug.Log($"[BET] Balance after bet: {playerBalance:F2} USDT");
             UpdateBalanceUI();
         }
 
@@ -296,6 +301,7 @@ public class GameManager : MonoBehaviour
 
         if (isFiveBonusAcross && !hasGrantedFreeSpinsThisSpin)
         {
+            AudioManager.Instance.PlayBonusSpinSound();
             freeSpinsRemaining += 5;
             isFreeSpinActive = true;
             hasGrantedFreeSpinsThisSpin = true;
@@ -310,6 +316,50 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private IEnumerator CheckForMatchesAndHandleEnd()
+    {
+        int previousMatches = matchedPositions.Count;
+        matchedPositions.Clear();
+        CheckForMatches();
+
+        yield return new WaitForSeconds(0.6f);
+
+        if (matchedPositions.Count >= 3)
+        {
+            yield return StartCoroutine(RespawnMatchedSymbols());
+        }
+        else
+        {
+            if (!hasAppliedWinnings && winningsThisSpin > 0f)
+            {
+                float finalWinnings = winningsThisSpin * currentMultiplier;
+
+//              Debug.Log($"[SPIN RESULT] Winnings before multiplier: {winningsThisSpin:F2} USDT");
+//              Debug.Log($"[SPIN RESULT] Multiplier: x{currentMultiplier}");
+//              Debug.Log($"[SPIN RESULT] Final winnings: {finalWinnings:F2} USDT");
+
+                if (BalanceAnimationCoroutine != null)
+                    StopCoroutine(BalanceAnimationCoroutine);
+
+                float previousBalance = playerBalance;
+                playerBalance += finalWinnings;
+//              Debug.Log($"[SPIN RESULT] Balance after win: {playerBalance:F2} USDT");
+                BalanceAnimationCoroutine = StartCoroutine(AnimateBalance(previousBalance, playerBalance, 1f));
+
+                UpdateBalanceUI();
+                SaveBalance();
+
+                if (winningsAnimationCoroutine != null)
+                    StopCoroutine(winningsAnimationCoroutine);
+
+                winningsAnimationCoroutine = StartCoroutine(AnimateWinningsToZero(finalWinnings, 1f));
+
+                hasAppliedWinnings = true;
+                winningsThisSpin = 0f;
+            }
+        }
+    }
+
 
     private void AddToBalance(GameObject piece)
     {
@@ -318,17 +368,17 @@ public class GameManager : MonoBehaviour
         {
             float winAmount = info.value * betAmount;
             winningsThisSpin += winAmount;
-//          Debug.Log($"[Total Winnings So Far] {winningsThisSpin} USDT (before multiplier)");
+            //          Debug.Log($"[Total Winnings So Far] {winningsThisSpin} USDT (before multiplier)");
             if (winningsText != null)
             {
                 if (winningsAnimationCoroutine != null)
                     StopCoroutine(winningsAnimationCoroutine);
 
-                winningsAnimationCoroutine = StartCoroutine(AnimateWinnings(0f, winningsThisSpin, 1.5f));
+                winningsAnimationCoroutine = StartCoroutine(AnimateWinnings(0f, winningsThisSpin, 0.6f));
             }
             if (!rewardSoundPlayedThisSpin)
 
-            AudioManager.Instance.PlayRewardSound();
+                AudioManager.Instance.PlayRewardSound();
 
             UpdateBalanceUI();
         }
@@ -363,7 +413,7 @@ public class GameManager : MonoBehaviour
         Destroy(explosion, 1f);
     }
 
-   private void UpdateBalanceUI()
+    private void UpdateBalanceUI()
     {
         if (balanceText != null)
             balanceText.text = $"{playerBalance:F2}USDT";
@@ -374,17 +424,29 @@ public class GameManager : MonoBehaviour
         if (betText != null)
             betText.text = $"{betAmount:F2} USDT";
     }
-
-    public void IncreaseBet()
+    public void OnIncreaseBetButtonClicked()
     {
+        StartCoroutine(IncreaseBet());
+    }
+
+    public void OnDecreaseBetButtonClicked()
+    {
+        StartCoroutine(DecreaseBet());
+    }
+    public IEnumerator IncreaseBet()
+    {
+        AudioManager.Instance.PlayPlusMinusSound();
+        yield return new WaitForSeconds(0.1f);
         betAmount += 5f;
         UpdateBetUI();
     }
 
-    public void DecreaseBet()
+    public IEnumerator DecreaseBet()
     {
         if (betAmount > minBetAmount)
         {
+            AudioManager.Instance.PlayPlusMinusSound();
+            yield return new WaitForSeconds(0.1f);
             betAmount -= 5f;
             UpdateBetUI();
         }
@@ -487,7 +549,7 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator RespawnMatchedSymbols()
     {
-        yield return new WaitForSeconds(0.2f); 
+        yield return new WaitForSeconds(0.2f);
 
         foreach (Vector2Int pos in matchedPositions)
         {
@@ -508,21 +570,21 @@ public class GameManager : MonoBehaviour
 
         matchedPositions.Clear();
         yield return new WaitForSeconds(0.5f);
-        CheckForMatches();
+        yield return StartCoroutine(CheckForMatchesAndHandleEnd());
 
-        yield return new WaitForSeconds(1f);
+
 
         if (!hasAppliedWinnings && winningsThisSpin > 0f)
         {
-//          Debug.Log($"[Before Multiplier] Total winnings: {winningsThisSpin} USDT");
-//          Debug.Log($"[Multiplier] Current multiplier: x{currentMultiplier}");
+            //          Debug.Log($"[Before Multiplier] Total winnings: {winningsThisSpin} USDT");
+            //          Debug.Log($"[Multiplier] Current multiplier: x{currentMultiplier}");
             if (currentMultiplier > 1)
             {
                 winningsThisSpin *= currentMultiplier;
                 StartCoroutine(EndSpinCoroutine());
             }
-            
-//          Debug.Log($"[After Multiplier] Final winnings added to balance: {winningsThisSpin} USDT");
+
+            //          Debug.Log($"[After Multiplier] Final winnings added to balance: {winningsThisSpin} USDT");
             balanceBefore = playerBalance;
             playerBalance += winningsThisSpin;
 
@@ -531,13 +593,13 @@ public class GameManager : MonoBehaviour
 
             float targetBalance = playerBalance;
 
-            BalanceAnimationCoroutine = StartCoroutine(AnimateBalance(balanceBefore, targetBalance, 2f));
+            BalanceAnimationCoroutine = StartCoroutine(AnimateBalance(balanceBefore, targetBalance, 1f));
 
             UpdateBalanceUI();
             SaveBalance();
             hasAppliedWinnings = true;
         }
-            
+
     }
 
     private IEnumerator AnimateAppearance(GameObject piece)
@@ -545,7 +607,7 @@ public class GameManager : MonoBehaviour
         if (piece == null) yield break;
 
         Vector3 targetScale = piece.transform.localScale;
-        piece.transform.localScale = Vector3.zero; 
+        piece.transform.localScale = Vector3.zero;
 
         float elapsedTime = 0f;
         float duration = 0.3f;
@@ -609,7 +671,7 @@ public class GameManager : MonoBehaviour
         }
 
         MultiplierValue.rectTransform.localScale = originalScale;
-        
+
     }
 
     private IEnumerator AnimateFreeSpinUI()
@@ -720,13 +782,14 @@ public class GameManager : MonoBehaviour
         PlayerPrefs.SetFloat("Balance", playerBalance);
         currentMultiplier = 1;
 
-//      Debug.Log($"[DEBUG] Final Balance: {playerBalance}");
+        //      Debug.Log($"[DEBUG] Final Balance: {playerBalance}");
         UpdateBalanceUI();
     }
 
     private IEnumerator AnimateBalance(float from, float to, float duration)
     {
         float elapsed = 0f;
+        AudioManager.Instance.PlayBalanceSound();
         while (elapsed < duration)
         {
             float current = Mathf.Lerp(from, to, elapsed / duration);
@@ -737,5 +800,43 @@ public class GameManager : MonoBehaviour
 
         balanceText.text = $"{playerBalance:F2}USDT";
     }
+
+    private IEnumerator AnimateWinningsToZero(float from, float duration)
+    {
+        float elapsed = 0f;
+        float to = 0f;
+
+        Vector3 largeScale = winningsOriginalScale * 1.5f;
+        Vector2 originalPosition = winningsText.rectTransform.anchoredPosition;
+
+        while (elapsed < duration)
+        {
+            float current = Mathf.Lerp(from, to, elapsed / duration);
+            winningsText.text = $"{current:F2}";
+            winningsText.rectTransform.localScale = Vector3.Lerp(winningsOriginalScale, largeScale, elapsed / duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        winningsText.text = "0.00";
+        winningsText.rectTransform.localScale = winningsOriginalScale;
+
+        AudioManager.Instance.PlayMultiplierAppearSound();
+
+        float shakeTime = 0.3f;
+        float shakeMagnitude = 3f;
+        elapsed = 0f;
+        while (elapsed < shakeTime)
+        {
+            Vector2 randomOffset = Random.insideUnitCircle * shakeMagnitude;
+            winningsText.rectTransform.anchoredPosition = originalPosition + randomOffset;
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        winningsText.rectTransform.anchoredPosition = originalPosition;
+    }
     
 }
+
+
