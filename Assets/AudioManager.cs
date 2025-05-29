@@ -16,6 +16,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip bonusSpinClip;
     public AudioClip PlusMinusClip;
     public AudioClip IncreasingBetClip;
+    public AudioClip downloadClip;
     private float lastRewardSoundTime = -10f;
     private float rewardSoundCooldown = 0.2f;
 
@@ -47,7 +48,14 @@ public class AudioManager : MonoBehaviour
             musicSource.Play();
         }
     }
-    
+
+    public void PlayDownloadSound()
+    {
+        if (downloadClip != null)
+        {
+            audioSource.PlayOneShot(downloadClip);
+        }
+    }
     public void PlaySpinClick()
     {
         if (spinClickClip != null)
