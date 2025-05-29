@@ -36,10 +36,11 @@ public class GameManager : MonoBehaviour
     private Vector3 winningsOriginalScale;
     private Coroutine BalanceAnimationCoroutine;
     private float balanceBefore = 0f;
-    private bool allMatchesResolved = false;
-
+    private Coroutine multiplierAnimCoroutine;
+    private Coroutine winningsToZeroCoroutine;
+    private bool isFinalWinningsApplied = false;
     void Start()
-    {   
+    {
         AudioManager.Instance.PlayBackgroundMusic();
         winningsOriginalScale = winningsText.rectTransform.localScale;
         _board = GameObject.Find("GameBoard");
@@ -91,19 +92,23 @@ public class GameManager : MonoBehaviour
 
     public void Spin()
     {
+        isFinalWinningsApplied = false;
+        hasAppliedWinnings = false;
+
         if (spinButton != null)
             spinButton.interactable = false;
+
         AudioManager.Instance.PlaySpinClick();
         rewardSoundPlayedThisSpin = false;
         winningsThisSpin = 0f;
-        hasAppliedWinnings = false;
+
         if (winningsText != null)
         {
             winningsText.text = "0.00";
         }
         hasGrantedFreeSpinsThisSpin = false;
 
-//      Debug.Log($"=== [SPIN START] Balance before spin: {playerBalance:F2} USDT");
+        //      Debug.Log($"=== [SPIN START] Balance before spin: {playerBalance:F2} USDT");
 
         if (!isFreeSpinActive && playerBalance < betAmount)
         {
@@ -121,7 +126,7 @@ public class GameManager : MonoBehaviour
         {
             isFreeSpinActive = false;
             playerBalance -= betAmount;
-//           Debug.Log($"[BET] Balance after bet: {playerBalance:F2} USDT");
+            //           Debug.Log($"[BET] Balance after bet: {playerBalance:F2} USDT");
             UpdateBalanceUI();
         }
 
@@ -134,8 +139,6 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator SpinRoutine()
     {
-        allMatchesResolved = false;
-
         List<Coroutine> animations = new List<Coroutine>();
 
         for (int i = 0; i < boardHeight; i++)
@@ -267,7 +270,9 @@ public class GameManager : MonoBehaviour
                             StartCoroutine(AnimateMatchEffect(_gameBoard[row, col], 0.1f));
                         appliedMultipliers.Add(multiplierValue);
                         currentMultiplier *= multiplierValue;
-                        StartCoroutine(AnimateMultiplierUI());
+                        if (multiplierAnimCoroutine != null)
+                            StopCoroutine(multiplierAnimCoroutine);
+                        multiplierAnimCoroutine = StartCoroutine(AnimateMultiplierUI());
                     }
                 }
             }
@@ -333,39 +338,10 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            if (!hasAppliedWinnings && winningsThisSpin > 0f && allMatchesResolved)
-            {
-                if (currentMultiplier <= 1)
-                {
-                    float finalWinnings = winningsThisSpin;
-
-                    if (BalanceAnimationCoroutine != null)
-                        StopCoroutine(BalanceAnimationCoroutine);
-
-                    float previousBalance = playerBalance;
-                    playerBalance += finalWinnings;
-
-                    BalanceAnimationCoroutine = StartCoroutine(AnimateBalance(previousBalance, playerBalance, 1f));
-
-                    UpdateBalanceUI();
-
-                    if (winningsAnimationCoroutine != null)
-                        StopCoroutine(winningsAnimationCoroutine);
-
-                    winningsAnimationCoroutine = StartCoroutine(AnimateWinningsToZero(finalWinnings, 1f));
-
-                    hasAppliedWinnings = true;
-                    winningsThisSpin = 0f;
-                }
-                else
-                {
-                    StartCoroutine(EndSpinCoroutine());
-                }
-            }
+            StartCoroutine(CompleteFinalWinnings());
         }
-
         if (spinButton != null)
-                spinButton.interactable = true;
+            spinButton.interactable = true;
     }
 
 
@@ -579,36 +555,12 @@ public class GameManager : MonoBehaviour
         matchedPositions.Clear();
         if (spinButton != null)
             spinButton.interactable = true;
+
         yield return new WaitForSeconds(0.5f);
         yield return StartCoroutine(CheckForMatchesAndHandleEnd());
-
-
-        allMatchesResolved = true;
-        if (!hasAppliedWinnings && winningsThisSpin > 0f)
-        {
-            //          Debug.Log($"[Before Multiplier] Total winnings: {winningsThisSpin} USDT");
-            //          Debug.Log($"[Multiplier] Current multiplier: x{currentMultiplier}");
-            if (currentMultiplier > 1)
-            {
-                winningsThisSpin *= currentMultiplier;
-                StartCoroutine(EndSpinCoroutine());
-            }
-
-            //          Debug.Log($"[After Multiplier] Final winnings added to balance: {winningsThisSpin} USDT");
-            balanceBefore = playerBalance;
-            playerBalance += winningsThisSpin;
-
-            if (BalanceAnimationCoroutine != null)
-                StopCoroutine(BalanceAnimationCoroutine);
-
-            float targetBalance = playerBalance;
-
-            BalanceAnimationCoroutine = StartCoroutine(AnimateBalance(balanceBefore, targetBalance, 1f));
-
-            UpdateBalanceUI();
-            hasAppliedWinnings = true;
-        }
+        StartCoroutine(CompleteFinalWinnings());
     }
+
 
     private IEnumerator AnimateAppearance(GameObject piece)
     {
@@ -634,9 +586,14 @@ public class GameManager : MonoBehaviour
     {
         Vector3 originalScale = MultiplierValue.rectTransform.localScale;
         Vector3 largeScale = originalScale * 2f;
+        Vector2 originalPosition = MultiplierValue.rectTransform.anchoredPosition;
+
+        MultiplierValue.rectTransform.localScale = originalScale;
+        MultiplierValue.rectTransform.anchoredPosition = originalPosition;
 
         float duration = 0.3f;
         float elapsedTime = 0f;
+
         while (elapsedTime < duration)
         {
             MultiplierValue.rectTransform.localScale = Vector3.Lerp(originalScale, largeScale, elapsedTime / duration);
@@ -647,8 +604,6 @@ public class GameManager : MonoBehaviour
         float shakeTime = 0.3f;
         float shakeMagnitude = 5f;
         elapsedTime = 0f;
-        Vector2 originalPosition = MultiplierValue.rectTransform.anchoredPosition;
-
         while (elapsedTime < shakeTime)
         {
             Vector2 randomOffset = Random.insideUnitCircle * shakeMagnitude;
@@ -656,19 +611,12 @@ public class GameManager : MonoBehaviour
             elapsedTime += Time.deltaTime;
             yield return null;
         }
-        MultiplierValue.text = $"x{currentMultiplier}";
-        MultiplierValue.rectTransform.anchoredPosition = originalPosition;
-        AudioManager.Instance.PlayMultiplierAppearSound();
-        elapsedTime = 0f;
-        while (elapsedTime < duration)
-        {
-            MultiplierValue.rectTransform.localScale = Vector3.Lerp(largeScale, originalScale, elapsedTime / duration);
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
 
         MultiplierValue.rectTransform.localScale = originalScale;
+        MultiplierValue.rectTransform.anchoredPosition = originalPosition;
 
+        MultiplierValue.text = $"x{currentMultiplier}";
+        AudioManager.Instance.PlayMultiplierAppearSound();
     }
 
     private IEnumerator AnimateFreeSpinUI()
@@ -763,24 +711,29 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator EndSpinCoroutine()
     {
-        float baseGain = winningsThisSpin;
-        float multipliedGain = baseGain * currentMultiplier;
+        float finalWin = winningsThisSpin * currentMultiplier;
 
-
-        winningsText.text = $"{baseGain:F2}";
-
-        Coroutine gainAnim = StartCoroutine(AnimateWinnings(baseGain, multipliedGain, 1f));
-        AudioManager.Instance.PlayMultiplyRewardSound();
+        Coroutine gainAnim = StartCoroutine(AnimateWinnings(winningsThisSpin, finalWin, 1f));
         Coroutine multiplierAnim = StartCoroutine(AnimateMultiplierUI());
 
         yield return gainAnim;
 
-        playerBalance += multipliedGain;
-        PlayerPrefs.SetFloat("Balance", playerBalance);
-        currentMultiplier = 1;
+        if (BalanceAnimationCoroutine != null)
+            StopCoroutine(BalanceAnimationCoroutine);
 
-        //      Debug.Log($"[DEBUG] Final Balance: {playerBalance}");
+        BalanceAnimationCoroutine = StartCoroutine(AnimateBalance(playerBalance, playerBalance + finalWin, 1f));
+        playerBalance += finalWin;
+
+        if (winningsToZeroCoroutine != null)
+            StopCoroutine(winningsToZeroCoroutine);
+
+        yield return new WaitForSeconds(1f);
+        winningsToZeroCoroutine = StartCoroutine(AnimateWinningsToZero(finalWin, 1f));
+
+        winningsThisSpin = 0f;
+        hasAppliedWinnings = true;
         UpdateBalanceUI();
+        currentMultiplier = 1;
     }
 
     private IEnumerator AnimateBalance(float from, float to, float duration)
@@ -817,6 +770,7 @@ public class GameManager : MonoBehaviour
 
         winningsText.text = "0.00";
         winningsText.rectTransform.localScale = winningsOriginalScale;
+        winningsText.rectTransform.anchoredPosition = originalPosition;
 
         AudioManager.Instance.PlayMultiplierAppearSound();
 
@@ -832,6 +786,36 @@ public class GameManager : MonoBehaviour
         }
 
         winningsText.rectTransform.anchoredPosition = originalPosition;
+        winningsText.rectTransform.localScale = winningsOriginalScale;
     }
     
+    private IEnumerator CompleteFinalWinnings()
+    {
+        if (isFinalWinningsApplied || winningsThisSpin <= 0f) yield break;
+
+        isFinalWinningsApplied = true;
+
+        float baseGain = winningsThisSpin;
+        float finalGain = baseGain * currentMultiplier;
+
+        Coroutine gainAnim = StartCoroutine(AnimateWinnings(baseGain, finalGain, 1f));
+        AudioManager.Instance.PlayMultiplyRewardSound();
+        Coroutine multiplierAnim = StartCoroutine(AnimateMultiplierUI());
+        yield return gainAnim;
+
+        if (winningsToZeroCoroutine != null)
+            StopCoroutine(winningsToZeroCoroutine);
+
+        yield return new WaitForSeconds(1f);
+        winningsToZeroCoroutine = StartCoroutine(AnimateWinningsToZero(finalGain, 1f));
+
+        BalanceAnimationCoroutine = StartCoroutine(AnimateBalance(playerBalance, playerBalance + finalGain, 1f));
+        playerBalance += finalGain;
+        UpdateBalanceUI();
+
+
+        winningsThisSpin = 0f;
+        currentMultiplier = 1;
+    }
+
 }
