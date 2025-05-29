@@ -2970,6 +2970,7 @@ MonoBehaviour:
   MultiplierValue: {fileID: 1529800506}
   freeSpinText: {fileID: 539368377}
   winningsText: {fileID: 1255284042}
+  spinButton: {fileID: 1555731375}
   freeSpinsRemaining: 0
 --- !u!4 &771841488
 Transform:
@@ -5016,7 +5017,7 @@ GameObject:
   - component: {fileID: 1555731375}
   - component: {fileID: 1555731378}
   m_Layer: 0
-  m_Name: Button (Legacy)
+  m_Name: spinButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

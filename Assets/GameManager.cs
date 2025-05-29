@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -17,7 +18,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI MultiplierValue;
     [SerializeField] public TextMeshProUGUI freeSpinText;
     [SerializeField] private TextMeshProUGUI winningsText;
-    
+    [SerializeField] private Button spinButton;
+
     private bool rewardSoundPlayedThisSpin = false;
     public int freeSpinsRemaining = 0;
     private bool isFreeSpinActive = false;
@@ -94,6 +96,8 @@ public class GameManager : MonoBehaviour
 
     public void Spin()
     {
+        if (spinButton != null)
+            spinButton.interactable = false;
         AudioManager.Instance.PlaySpinClick();
         rewardSoundPlayedThisSpin = false;
         winningsThisSpin = 0f;
@@ -161,6 +165,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
 
         CheckForMatches();
+        yield return StartCoroutine(CheckForMatchesAndHandleEnd());
     }
 
     private void CheckForMatches()
@@ -334,16 +339,16 @@ public class GameManager : MonoBehaviour
             {
                 float finalWinnings = winningsThisSpin * currentMultiplier;
 
-//              Debug.Log($"[SPIN RESULT] Winnings before multiplier: {winningsThisSpin:F2} USDT");
-//              Debug.Log($"[SPIN RESULT] Multiplier: x{currentMultiplier}");
-//              Debug.Log($"[SPIN RESULT] Final winnings: {finalWinnings:F2} USDT");
+                //              Debug.Log($"[SPIN RESULT] Winnings before multiplier: {winningsThisSpin:F2} USDT");
+                //              Debug.Log($"[SPIN RESULT] Multiplier: x{currentMultiplier}");
+                //              Debug.Log($"[SPIN RESULT] Final winnings: {finalWinnings:F2} USDT");
 
                 if (BalanceAnimationCoroutine != null)
                     StopCoroutine(BalanceAnimationCoroutine);
 
                 float previousBalance = playerBalance;
                 playerBalance += finalWinnings;
-//              Debug.Log($"[SPIN RESULT] Balance after win: {playerBalance:F2} USDT");
+                //              Debug.Log($"[SPIN RESULT] Balance after win: {playerBalance:F2} USDT");
                 BalanceAnimationCoroutine = StartCoroutine(AnimateBalance(previousBalance, playerBalance, 1f));
 
                 UpdateBalanceUI();
@@ -358,6 +363,8 @@ public class GameManager : MonoBehaviour
                 winningsThisSpin = 0f;
             }
         }
+        if (spinButton != null)
+                spinButton.interactable = true;
     }
 
 
@@ -569,6 +576,8 @@ public class GameManager : MonoBehaviour
         }
 
         matchedPositions.Clear();
+        if (spinButton != null)
+            spinButton.interactable = true;
         yield return new WaitForSeconds(0.5f);
         yield return StartCoroutine(CheckForMatchesAndHandleEnd());
 
